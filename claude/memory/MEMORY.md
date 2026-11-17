@@ -1,0 +1,9 @@
+- [No OpenAI image generation](no-openai-image-generation.md) — user forbids using the OpenAI key to make images
+- [Documentary style direction](documentary-style-direction.md) — Netflix-doc craft with AI voice-over, no filmed interviews
+- [Music and motion tool choices](music-and-motion-tool-choices.md) — Suno via AI33 + BGM library (no vidIQ music); Remotion/HyperFrames graphics; vet b-roll
+- [Render 1080p by default](render-1080-default.md) — 1080p only; 4K only when the user asks
+- [Graphics density](graphics-density.md) — user wants ~45 on-screen graphics per film like Aral V2, not bare VO over footage
+- [Music coverage](music-coverage.md) — near-continuous score ~15 dB under narration; user found 65% coverage at -21 dB 'lacking'
+- [Doc pipeline engine](doc-pipeline-engine.md) — shared doc.py engine + Vietnamese workflow guide for new films
+- [Stage per session](stage-per-session.md) — one pipeline stage per session with HANDOVER.md; film 13 in one session cost ~70–110% of 5h
+- [Sonnet picks b-roll](sonnet-picks-broll.md) — contact sheets go to a Sonnet subagent (PICKER_SONNET.md); CLIP removed, don't re-propose

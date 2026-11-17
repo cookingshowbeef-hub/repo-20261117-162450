@@ -1,0 +1,20 @@
+# secrets and per-machine settings never go in the repo (they live in ~/.docpipe/)
+*.env
+.env*
+keys*
+settings.env
+
+# python / node
+__pycache__/
+*.pyc
+node_modules/
+templates/remotion/node_modules/
+
+# film projects and media stay on the machine
+projects/
+*.mp4
+*.mov
+*.wav
+*.m4a
+*.mp3
+!templates/**/*.mp3

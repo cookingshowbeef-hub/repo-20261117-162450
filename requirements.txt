@@ -1,0 +1,10 @@
+numpy>=2.0
+opencv-python>=4.10
+requests>=2.31
+pillow>=10
+scipy>=1.11
+soundfile>=0.12
+faster-whisper>=1.1
+# GPU timings for faster-whisper (NVIDIA only; CPU works without these, slower)
+nvidia-cublas-cu12
+nvidia-cudnn-cu12
