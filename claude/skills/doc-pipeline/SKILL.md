@@ -60,7 +60,7 @@ python doc.py <prj> review         # -> 05_Renders/review/timeline.fcpxml (tự 
 
 **Phong cách**
 - Phim tài liệu kiểu Netflix, lời dẫn AI, không phỏng vấn quay thật.
-- **Đồ họa dày:** khoảng 45 đồ họa cho 20 phút (≥ 2–3 mỗi phút), gắn vào đúng chữ trong lời dẫn.
+- **Đồ họa dày:** 2,5–3 đồ họa mỗi phút (50–60 cho phim 20 phút), gắn vào đúng chữ trong lời dẫn.
 - **Nhạc gần như liên tục** (≥ 85% thời lượng lời dẫn), khoảng 15 dB dưới giọng. Nhạc: cue chính tạo bằng Suno qua AI33 (`doc.py <prj> music make <cue> "<prompt>"`, ~3.600 credit AI33, 2 bản không lời), phần nối lấy từ kho 244 bài có sẵn (`music lib <từ khóa>`). **Không dùng vidIQ để tạo nhạc nữa** (17/11/2026). Chi tiết: `QUY_TRINH.md` mục 7.
 - **B-roll** phải đúng nội dung từng câu và không lặp lại. Clip `generic` không bao giờ được gọi tên là một địa danh (luật trung thực địa điểm).
 

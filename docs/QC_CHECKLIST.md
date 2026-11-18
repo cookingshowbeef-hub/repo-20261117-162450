@@ -9,7 +9,7 @@ Chạy `python doc.py <dự án> qc` trước. Mọi dòng **FIX** trong `05_Ren
 - [ ] Số hình khác nhau ≥ 75% số cảnh.
 - [ ] Ảnh tĩnh nào cũng có chuyển động.
 - [ ] Hình dưới lower third phải đúng thứ lower third gọi tên. Clip generic không được nằm dưới một tên riêng.
-- [ ] Mật độ đồ họa ≥ 2/phút (khoảng 45 cho phim 20 phút).
+- [ ] Mật độ đồ họa 2,5–3/phút (50–60 cho phim 20 phút).
 - [ ] Đồ họa toàn màn hình không đứng yên quá 6 s sau nhịp cuối.
 - [ ] Giữa thẻ tựa và thẻ phần đầu có ≥ 1,5 s màn đen.
 - [ ] Nhạc phủ ≥ 85% lời dẫn. Bản trộn cuối đạt −14 ±1 LUFS, true peak ≤ −1,5 dBFS.

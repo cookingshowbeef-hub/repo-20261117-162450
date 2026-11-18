@@ -111,7 +111,7 @@ def qc(P, args):
     row(not sus, "Generic clip under a caption", f"{len(sus)} " + "; ".join(sus), "the picture under a lower third must show what it names; never caption stock as a named place")
     # graphics
     gpm = len(O) / mins
-    row(gpm >= 2.0, "Graphics density", f"{len(O)} graphics, {gpm:.1f}/min", "≥ 2.0/min (about 45 in a 20-min film)")
+    row(gpm >= 2.5, "Graphics density", f"{len(O)} graphics, {gpm:.1f}/min", "2.5-3/min (50-60 in a 20-min film)")
     full = [o for o in O if o["kind"] in E["full_kinds"]]
     stat = [f"{o['id']} {o['p']['dur'] - max(o['p']['at']):.1f}s" for o in full if o["p"]["dur"] - max(o["p"]["at"]) > P.cfg["overlay"]["full_hold"] + 0.1]
     row(not stat, "Full-screen graphics holding still", f"{len(stat)} " + ", ".join(stat[:5]), f"≤ {P.cfg['overlay']['full_hold']} s after the last beat")

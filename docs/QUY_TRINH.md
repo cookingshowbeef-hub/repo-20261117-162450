@@ -112,7 +112,7 @@ python doc.py 12 gfx              # render toàn bộ (ProRes 4444 có kênh alp
 python doc.py 12 gfx G07 G15      # chỉ render lại vài cái
 ```
 
-- **Mật độ: khoảng 45 đồ họa cho 20 phút, tức ≥ 2 đồ họa mỗi phút** (chuẩn từ Aral V2). Phim chỉ có lời dẫn trên footage thì quá trống.
+- **Mật độ: 2,5–3 đồ họa mỗi phút**, tức 50–60 đồ họa cho phim 20 phút (người dùng chốt 18/11/2026; phim 13 đạt 2,8). Aral V2 dày hơn (khoảng 45 đồ họa trong 12 phút), đó là mức trần chứ không phải mục tiêu. Phim chỉ có lời dẫn trên footage thì quá trống.
 - Có sẵn các loại: title, chapter, lower, stamp, stat, list, words, quote, define, timeline, map, bars, split_labels, end_text… (trong `Film.jsx` và `Overlays.jsx`). Màu nhận diện của từng phim đổi ở đầu hai file này.
 - **Đồ họa toàn màn hình (bản đồ…) phải luôn chuyển động**: camera đẩy chậm hoặc vật thể trượt vào. Đứng yên tối đa 6 s sau nhịp cuối, vì Oymyakon từng có 15 s bản đồ đứng im. Bên dưới chúng có một tấm nền màu, nên b-roll không chớp lộ ra giữa hai bản đồ.
 - Giữa thẻ tựa và thẻ phần đầu tiên phải có ≥ 1,5 s màn đen.
