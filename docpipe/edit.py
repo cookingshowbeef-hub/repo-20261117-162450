@@ -5,6 +5,7 @@ Asset codes in script_template.md VISUAL lines, in narration order:
   px:<id> / pb:<id>               Pexels / Pixabay clip (02_B-Roll/pexels|pixabay)
   nasa:<topic>                    NASA image (03_Images/nasa); topics in edit.nasa_sequences play every file in order
   file:<path>                     any image or clip, path relative to the project
+  lk:<id>                         local footage: id -> absolute path in 02_B-Roll/local/index.json (paths with spaces/Vietnamese)
   <code>@"phrase"                 word anchor: the picture comes in 0.15 s before that phrase is spoken in the block's lines
   <code>@+2.4                      time mark: the picture comes in 2.4 s after the block's first line starts
 edit.mode "timed" (recommended): every picture starts at its mark and lasts until the next one; the first picture of a block
@@ -19,16 +20,17 @@ never twice within edit.clip_gap s; photos at most edit.photo_cap times. Short b
 Full-screen graphics (edit.full_kinds) get a plain plate under them so no footage flashes between them; title -> first chapter
 sits on black and the next shot fades up.
 """
+import unicodedata
 import json, math, os, re, sys
 import numpy as np, cv2
 from .ctx import VO
 
-ASSET = re.compile(r"photo:(\w+)((?:#\d+(?:, )?)+)|(px|pb):(\d+)|nasa:(\w+)|file:([^\s;,)@]+)")
+ASSET = re.compile(r"photo:(\w+)((?:#\d+(?:, )?)+)|(px|pb):(\d+)|nasa:(\w+)|file:([^\s;,)@]+)|lk:([\w-]+)")
 # word anchor: px:123@"double rainbow" = this picture comes in when that phrase is spoken (in this block's lines)
-ANCHOR = re.compile(r'((?:px|pb):\d+|photo:\w+#\d+|nasa:\w+|file:[^\s;,)@]+)@(?:"([^"]+)"|\+(\d+(?:\.\d+)?))')
+ANCHOR = re.compile(r'((?:px|pb):\d+|photo:\w+#\d+|nasa:\w+|file:[^\s;,)@]+|lk:[\w-]+)@(?:"([^"]+)"|\+(\d+(?:\.\d+)?))')
 anchor_val = lambda m: m.group(2) if m.group(2) is not None else float(m.group(3))
-norm = lambda w: re.sub(r"[^a-z0-9']", "", w.lower())
-is_clip = lambda a: a.split(":")[0] in ("px", "pb") or (a.startswith("file:") and a.lower().endswith((".mp4", ".mov", ".webm", ".mkv")))
+norm = lambda w: re.sub(r"[^\w']", "", unicodedata.normalize("NFC", w).lower().replace("’", "'"))   # Unicode-aware (Vietnamese diacritics)
+is_clip = lambda a: a.split(":")[0] in ("px", "pb", "lk") or (a.startswith("file:") and a.lower().endswith((".mp4", ".mov", ".webm", ".mkv")))
 
 
 class Edit:
@@ -170,6 +172,8 @@ class Edit:
                 if not files:
                     sys.exit(f"no NASA images for topic {t}")
                 out += [f"nasa:{f}" for f in files] if t in self.E["nasa_sequences"] else [f"nasa:{files[0]}"]
+            elif m.group(7):
+                out.append(f"lk:{m.group(7)}")
             else:
                 out.append(f"file:{m.group(6)}")
         return out

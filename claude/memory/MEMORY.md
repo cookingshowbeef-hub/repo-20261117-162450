@@ -1,10 +1,13 @@
 - [No OpenAI image generation](no-openai-image-generation.md) — user forbids using the OpenAI key to make images
-- [Documentary style direction](documentary-style-direction.md) — Netflix-doc craft with AI voice-over, no filmed interviews
+- [Documentary style direction](documentary-style-direction.md) — Netflix-doc craft with AI voice-over, no filmed interviews (now the netflix-cold default style)
 - [Music and motion tool choices](music-and-motion-tool-choices.md) — Suno via AI33 + BGM library (no vidIQ music); Remotion/HyperFrames graphics; vet b-roll
 - [Render 1080p by default](render-1080-default.md) — 1080p only; 4K only when the user asks
-- [Graphics density](graphics-density.md) — 2.5–3 graphics/min (50–60 per 20-min film), pinned to the words; not bare VO over footage
-- [Music coverage](music-coverage.md) — near-continuous score ~15 dB under narration; user found 65% coverage at -21 dB 'lacking'
+- [Graphics density](graphics-density.md) — netflix-cold default 2.5–3 graphics/min, pinned to the words; other styles set their own rate
+- [Music coverage](music-coverage.md) — netflix-cold default: near-continuous score ~15 dB under narration; 65% at -21 dB was 'lacking'
 - [Doc pipeline engine](doc-pipeline-engine.md) — shared doc.py engine + Vietnamese workflow guide for new films
 - [Stage per session](stage-per-session.md) — one pipeline stage per session with HANDOVER.md; film 13 in one session cost ~70–110% of 5h
 - [Sonnet picks b-roll](sonnet-picks-broll.md) — contact sheets go to a Sonnet subagent (PICKER_SONNET.md); CLIP removed, don't re-propose
 - [Engine GitHub repo](engine-github-repo.md) — public repo of the engine (no secrets in it); new machines set up from its link; keys/settings in ~/.docpipe
+- [Premiere for new films](premiere-for-new-films.md) — new films go to Premiere via FCP7 XML; old Resolve films untouched
+- [Premiere editable text](premiere-editable-text.md) — XML Text generators editable, keyframes ignored; text_spec.py → V6+ text (film 17, no-Remotion films)
+- [Edit style presets](edit-style-presets.md) — films pick styles/<name>.json via film.json "style"; ask the style in stage 1, follow its rules/notes

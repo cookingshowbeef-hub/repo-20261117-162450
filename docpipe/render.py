@@ -24,12 +24,9 @@ class Renderer:
         self.MAN = P.load("03_Images", "commons", "manifest.json", default={})
         self.OVD = P.p("06_Graphics", "render", "ov")
         g = R["grade"]
-        x = np.arange(256) / 255.0
-        lut = np.clip((0.8 * x + 0.2 * x * x * (3 - 2 * x)) * 255 + 3, 0, 255)          # mild S-curve, lifted blacks
-        self.LUT3 = np.dstack([np.clip(lut * (1 + g["cool"]), 0, 255), lut, np.clip(lut * (1 - g["cool"] * 2 / 3), 0, 255)]).astype(np.uint8)
-        yy, xx = np.mgrid[0:self.H, 0:self.W]
-        vig = (1 - g["vignette"] * np.clip(((xx - self.W / 2) / (self.W / 2)) ** 2 + ((yy - self.H / 2) / (self.H / 2)) ** 2 - 0.25, 0, 1.5) / 1.5)
-        self.VIG3 = np.repeat(vig.astype(np.float32)[..., None], 3, axis=2)
+        from .style import curve, vignette                                            # the style's grade (S-curve, lift, tint) and vignette/letterbox
+        self.LUT3 = np.dstack(curve(g)).astype(np.uint8)
+        self.VIG3 = np.repeat(vignette(g, self.W, self.H)[..., None], 3, axis=2)
         self.sat = g["saturation"]
         self.USES = {}
 
@@ -121,8 +118,8 @@ class Renderer:
             return self.photo(imread(self.P.p("03_Images", "commons", self.MAN[self.IDX[ref]]["file"])), n, k, s["treatment"], s.get("focus"))
         if kind == "nasa":
             return self.photo(imread(self.P.p("03_Images", "nasa", ref)), n, k, "in")
-        if kind == "file":
-            path = self.P.p(ref)
+        if kind in ("file", "lk"):
+            path = self.P.p(ref) if kind == "file" else self.P.local(ref)
             if path.lower().endswith((".mp4", ".mov", ".webm", ".mkv")):
                 return self.video(path, n)
             return self.photo(imread(path), n, k, s["treatment"] or "in")

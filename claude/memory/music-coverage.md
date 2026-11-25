@@ -13,3 +13,5 @@ The user said "lacking music" about a Pagpag cut where music played 65% of the t
 **Why:** the channel's films are narrated with no interviews, so long stretches without score feel empty.
 
 **How to apply:** score every section, including act openings and cold opens. Measure each cue against the voice on the stems (`05_Renders/tests/music_level.py` in Pagpag) and aim for about 15 dB under the narration. Short deliberate cut-outs are fine. See [[music-and-motion-tool-choices]] and [[graphics-density]].
+
+Since 2026-11-25 these numbers are the `netflix-cold` default. Other styles set their own `rules.music_coverage` and `music_under_voice_db`, for example noir-crime at 70% and 17 dB. See [[edit-style-presets]].

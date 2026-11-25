@@ -3,7 +3,7 @@
   TOPICS = {topic: ([queries], how many to keep, must-mention regex, min width)}   Wikimedia Commons photos
 
   doc.py <prj> search <set>                     thumbnails + contact sheets -> 02_B-Roll/candidates/<set>/sheet_N.jpg (vet them by eye)
-  doc.py <prj> pick px:123=what it shows [pb:45=...] [--where "Siberia (not Yakutia)"]   add vetted clips to picks.json (default where: generic)
+  doc.py <prj> pick px:123=what it shows [pb:45=... lk:sig_003=...] [--where "Siberia (not Yakutia)"]   add vetted clips to picks.json (default where: generic)
   doc.py <prj> fetch                            download every pick -> 02_B-Roll/pexels|pixabay/<id>_<slug>.mp4 + manifest.json
   doc.py <prj> commons [topic ...]              free-licence Commons photos -> 03_Images/commons/<topic>/ + manifest.json, then contact sheets
   doc.py <prj> sheets                           rebuild the photo contact sheets (topic#n codes) -> 03_Images/commons/sheets/
@@ -88,7 +88,7 @@ def pick(P, args):
     for a in args:
         code, _, use = a.partition("=")
         kind, vid = code.split(":")
-        d.setdefault({"px": "pexels", "pb": "pixabay"}[kind], {})[vid] = [use or "?", where]
+        d.setdefault({"px": "pexels", "pb": "pixabay", "lk": "local"}[kind], {})[vid] = [use or "?", where]   # lk: = local footage (fetch skips it)
         n += 1
     os.makedirs(os.path.dirname(path), exist_ok=True)
     json.dump(d, open(path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
@@ -159,6 +159,11 @@ def commons(P, args):
     os.makedirs(root, exist_ok=True)
     S = requests.Session()
     S.headers["User-Agent"] = P.cfg["commons_user_agent"]
+    try:                                                    # Wikimedia throttles anonymous bots hard; a contact (COMMONS_CONTACT in keys.env) helps
+        contact = key("COMMONS_CONTACT")
+        S.headers["User-Agent"] = S.headers["User-Agent"].replace(") ", f"; {contact}) ", 1)
+    except SystemExit:
+        pass
     API = "https://commons.wikimedia.org/w/api.php"
 
     def get(params):
@@ -192,9 +197,12 @@ def commons(P, args):
                     continue                                                # must name the place / subject
                 if name in manifest or ii.get("mime") not in ("image/jpeg", "image/png") or ii.get("width", 0) < minw or not FREE.match(lic):
                     continue
-                url = ii["url"] if ii["width"] <= 2600 else (ii.get("thumburl") or ii["url"])
+                url = ii["url"] if ii["width"] <= 1920 else (ii.get("thumburl") or ii["url"])   # originals are throttled hard; 1920 is a standard thumb step
                 base, ext = os.path.splitext(name)
                 safe = re.sub(r"[^\w-]+", "_", base)[:60] + ext.lower()
+                if os.path.exists(os.path.join(root, topic, safe)):     # 60-char names collide (same species, same place): keep both
+                    safe = re.sub(r"[^\w-]+", "_", base)[:50] + f"_{p.get('pageid', got)}" + ext.lower()
+                time.sleep(1)
                 for attempt in range(4):
                     a = S.get(url, timeout=120)
                     if a.status_code != 429:

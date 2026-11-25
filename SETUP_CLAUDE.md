@@ -16,7 +16,8 @@
 | Node.js 20+ và `npm install` (Remotion) | Có | Render đồ họa motion |
 | `~/.docpipe/keys.env`: key AI33, Pexels, Pixabay, Freesound | Có | Giọng đọc, nhạc Suno, b-roll, tiếng động |
 | `~/.docpipe/settings.env`: thư mục dự án và kho nhạc | Có | Nơi để phim, nơi lấy nhạc và tiếng động |
-| DaVinci Resolve 21.0.x (bản Free được) | Có | Người dùng xem, góp ý, xuất bản cuối |
+| Adobe Premiere Pro (bản trả phí) | Có | Phim mới: người dùng mở timeline dựng sẵn, chỉnh, xuất bản cuối |
+| DaVinci Resolve 21.0.x (bản Free được) | Chỉ phim cũ | Phim đến số 15 dựng trên Resolve |
 | Skill `doc-pipeline` + memory (bước 6) | Có | Để Claude hiểu quy trình, các luật và lựa chọn của người dùng |
 | Kho nhạc BGM (244 bài Kevin MacLeod) và kho tiếng động | Nên có | Nhạc nối, tiếng động; không có thì dùng Suno + Freesound |
 | GPU NVIDIA | Không | Mốc thời gian giọng nhanh hơn; không có thì chạy CPU |
@@ -92,11 +93,16 @@ RESOLVE_MCP_DIR=C:\Users\<tên>\davinci-resolve-mcp                             
 xcopy /E /I "<ENGINE>\claude\skills\doc-pipeline" "%USERPROFILE%\.claude\skills\doc-pipeline"
 ```
 
-- Skill tự kích hoạt khi người dùng nói về làm phim, `doc.py`, timeline Resolve hay góp ý EDL. Bản gốc là bản trong repo; sửa xong thì chép lại.
+- Skill tự kích hoạt khi người dùng nói về làm phim, `doc.py`, timeline Premiere/Resolve hay góp ý EDL. Bản gốc là bản trong repo; sửa xong thì chép lại.
 - `claude/memory/` là các lựa chọn người dùng đã chốt (1080p, mật độ đồ họa, nhạc Suno, chọn hình bằng Sonnet, không dùng OpenAI tạo ảnh, mỗi chặng một session…). Chép các file `.md` trong đó vào thư mục memory của dự án Claude Code trên máy mới: `%USERPROFILE%\.claude\projects\<slug>\memory\`, với `<slug>` là thư mục làm việc của người dùng viết lại kiểu Claude Code (ví dụ `D:\4. bot\documentary` → `D--4--bot-documentary`). Nếu thư mục memory đã có `MEMORY.md` thì gộp các dòng, không ghi đè.
 - Nên mở session với thư mục làm việc là thư mục cha của dự án (ví dụ `documentary`).
 
-## 7. DaVinci Resolve
+## 7. Adobe Premiere Pro (phim mới) và DaVinci Resolve (phim cũ)
+
+**Premiere:** không cần cấu hình. `doc.py <prj> premiere` (hoặc `review` với phim có `"editor": "premiere"`) ghi `05_Renders/premiere/timeline.xml` và tự chép LUT vào `%APPDATA%\Adobe\Common\LUTs\Creative`. Người dùng import bằng File › Import. Cách làm chi tiết ở `docs/QUY_TRINH.md` mục 8.
+
+**Resolve (chỉ khi mở lại phim cũ):**
+
 
 1. Người dùng cài **DaVinci Resolve 21.0.x** (bản Free đủ dùng).
    **Không cập nhật lên 21.1 trở đi**: bản Free sẽ mất Python scripting và bridge.
@@ -139,7 +145,7 @@ Phải ra khoảng 295 cảnh và 65 đồ họa trong vài giây.
 
 ## 10. Sau khi cài: đọc quy trình
 
-1. `docs/QUY_TRINH.md`: từng bước, từ tạo dự án tới Resolve. Đọc hết trước phim đầu tiên.
+1. `docs/QUY_TRINH.md`: từng bước, từ tạo dự án tới Premiere. Đọc hết trước phim đầu tiên.
 2. `docs/PICKER_SONNET.md`: chọn b-roll và ảnh bằng agent Sonnet.
 3. `docs/QC_CHECKLIST.md`: duyệt bằng mắt.
 4. `doc.py` (chạy không kèm tham số): danh sách lệnh.
@@ -147,6 +153,6 @@ Phải ra khoảng 295 cảnh và 65 đồ họa trong vài giây.
 **Tóm tắt vòng làm việc** (mỗi chặng một session, bàn giao qua `05_Renders/HANDOVER.md`)
 1. Người dùng viết `Narration.md`. Claude: `voice` → `timeline`.
 2. Claude: `search` → bảng ảnh nhỏ → agent Sonnet chọn hình → `fetch`, `commons`.
-3. Claude: kịch bản hình → `overlays`/`gfx stills` → `music` → `lint` → `build` → `audio final` → `review`.
-4. Người dùng import `05_Renders/review/timeline.fcpxml` vào Resolve, gắn LUT, đặt marker góp ý, xuất EDL. Claude chạy `notes` → sửa → `review` lại.
-5. Người dùng tự xuất bản cuối trong Resolve. Claude chạy `qc` + `credits` trên file đó.
+3. Claude: kịch bản hình → `overlays`/`gfx stills` → `music` → `lint` → `build` → `audio final` → `premiere`.
+4. Người dùng import `05_Renders/premiere/timeline.xml` vào Premiere, gắn LUT bằng adjustment layer ở V2, chỉnh trên timeline.
+5. Người dùng tự xuất bản cuối trong Premiere. Claude chạy `qc` + `credits` trên file đó.

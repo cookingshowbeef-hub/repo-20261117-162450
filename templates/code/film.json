@@ -1,6 +1,8 @@
 {
  "title": "FILM TITLE",
  "output": "film_1080p.mp4",
+ "editor": "premiere",
+ "style": "netflix-cold",
  "narration_md": "Narration.md",
  "template": "script_template.md",
  "sections": ["c0", "a1", "a2", "a3", "c9"],
@@ -8,15 +10,12 @@
  "no_card_acts": ["COLD OPEN"],
  "voice": {"id": "elevenlabs_lnieQLGTodpbhjpZtg1k", "speed": 0.95, "language": "en"},
  "timing": {
-  "gap_line": 0.75, "gap_block": 1.8, "act_card": 5.5, "end_text": 20.0,
   "hold_before": {"c0_01": 6.0},
   "hold_after": {"c0_10": 7.9}
  },
- "edit": {"mode": "timed", "target": 3.6, "max": 5.0, "min": 2.5, "clip_cap": 2, "photo_cap": 3, "clip_gap": 60,
+ "edit": {"mode": "timed", "clip_cap": 2, "photo_cap": 3, "clip_gap": 60,
           "full_kinds": ["map"], "plate": "111418", "nasa_sequences": []},
- "overlay": {"full_hold": 6.0},
- "render": {"width": 1920, "height": 1080, "fps": 30, "grade": {"cool": 0.03, "saturation": 0.9, "vignette": 0.22}},
- "audio": {"lufs": -14, "duck_db": 6},
+ "render": {"width": 1920, "height": 1080, "fps": 30},
  "hud": null,
  "credits": {"extra": ["## Sources for on-screen figures", "- See FACT_CHECK.md in the project."]}
 }

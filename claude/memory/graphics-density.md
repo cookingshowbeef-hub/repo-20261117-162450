@@ -15,3 +15,5 @@ The user rejected a Pagpag cut (Nov 2026) for being "mostly voice over on footag
 **Target (user's choice, 2026-11-18): 2.5 to 3 graphics per minute**, which is 50–60 for a 20-minute film and about 70–80 for 27 minutes. Film 13 ran at 2.8 per minute. The Aral V2 rate of about 3.75 per minute is the reference ceiling, not the target.
 
 **How to apply:** Plan a graphics pass alongside the edit at 2.5 to 3 per minute, each pinned to the spoken words. Use act title cards, stats, word lists, timelines, diagrams and quotes, with legible scrims. Pagpag's version is `overlay_spec.py`, then `overlay_pass.py`, then `render_ov.mjs`, then `apply_overlays.py`. See [[documentary-style-direction]] and [[music-and-motion-tool-choices]].
+
+Since 2026-11-25 this rate is the `netflix-cold` default. A film on another style follows that style's `rules.gfx_per_min`, for example 1.8–2.5 for warm-vintage or 3–4 for clean-explainer. See [[edit-style-presets]].

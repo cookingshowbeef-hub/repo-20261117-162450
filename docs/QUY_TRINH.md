@@ -16,14 +16,17 @@ python doc.py <dự án> <bước> [tham số]
 ## 0. Tạo dự án
 
 ```
-python doc.py new "12. Tên phim (20 Phút) - slug" "FILM TITLE"
+python doc.py new "12. Tên phim (20 Phút) - slug" "FILM TITLE" [style]
+python doc.py styles                       # các phong cách có sẵn
 ```
+
+**Chọn phong cách trước tiên** (hỏi người dùng cùng lúc với ngôn ngữ phim). Phong cách là một file `styles/<tên>.json`, quyết định grade, letterbox, nhịp cắt, nhịp nghỉ, màu, font và chuyển động đồ họa, mật độ đồ họa, độ phủ nhạc, cùng ghi chú cho từng chặng (`notes`: b-roll, đồ họa, prompt nhạc). Mặc định là `netflix-cold`. Đổi sau: `doc.py <prj> style set <tên>`; xem thông số: `doc.py <prj> style`. Chi tiết và cách tạo phong cách mới: `docs/STYLES.md`. **Mọi con số "mục tiêu" bên dưới là của `netflix-cold`; phim dùng style khác thì theo `rules` và `notes` của style đó.**
 
 Lệnh này tạo các thư mục `01_Voice … 07_Audio` và chép file mẫu vào `04_Scripts_Code`. Nó cũng tạo `06_Graphics/remotion`, có thư viện đồ họa và `node_modules` dùng chung qua junction.
 
 | File trong `04_Scripts_Code` | Bạn viết gì |
 |---|---|
-| `film.json` | Tên phim, tag các phần, thời gian nghỉ, luật dựng, màu, âm lượng |
+| `film.json` | Tên phim, `style`, tag các phần, chỗ nghỉ riêng (`hold_before/after`); khóa nào ghi ở đây sẽ đè lên style |
 | `Narration.md` | Lời dẫn: mỗi dòng là một câu thoại |
 | `script_template.md` | Kịch bản hình: khối V.O. và mã hình cho từng khối |
 | `overlay_spec.py` | Đồ họa gắn vào chữ trong lời dẫn |
@@ -112,8 +115,8 @@ python doc.py 12 gfx              # render toàn bộ (ProRes 4444 có kênh alp
 python doc.py 12 gfx G07 G15      # chỉ render lại vài cái
 ```
 
-- **Mật độ: 2,5–3 đồ họa mỗi phút**, tức 50–60 đồ họa cho phim 20 phút (người dùng chốt 18/11/2026; phim 13 đạt 2,8). Aral V2 dày hơn (khoảng 45 đồ họa trong 12 phút), đó là mức trần chứ không phải mục tiêu. Phim chỉ có lời dẫn trên footage thì quá trống.
-- Có sẵn các loại: title, chapter, lower, stamp, stat, list, words, quote, define, timeline, map, bars, split_labels, end_text… (trong `Film.jsx` và `Overlays.jsx`). Màu nhận diện của từng phim đổi ở đầu hai file này.
+- **Mật độ theo `rules.gfx_per_min` của style** (`lint` báo nếu lệch). Với `netflix-cold`: **2,5–3 đồ họa mỗi phút**, tức 50–60 đồ họa cho phim 20 phút (người dùng chốt 18/11/2026; phim 13 đạt 2,8). Aral V2 dày hơn (khoảng 45 đồ họa trong 12 phút), đó là mức trần chứ không phải mục tiêu. Phim chỉ có lời dẫn trên footage thì quá trống.
+- Có sẵn các loại: title, chapter, lower, stamp, stat, list, words, quote, define, timeline, map, bars, split_labels, end_text… (trong `Film.jsx` và `Overlays.jsx`). **Màu, font, chuyển động chữ, hạt phim lấy từ style** (`gfx` trong `styles/<tên>.json`, ghi đè được bằng `"gfx"` trong `film.json`); `gfx` tự ghi `src/style.json` trước khi render. Không sửa hằng số màu trong JSX nữa.
 - **Đồ họa toàn màn hình (bản đồ…) phải luôn chuyển động**: camera đẩy chậm hoặc vật thể trượt vào. Đứng yên tối đa 6 s sau nhịp cuối, vì Oymyakon từng có 15 s bản đồ đứng im. Bên dưới chúng có một tấm nền màu, nên b-roll không chớp lộ ra giữa hai bản đồ.
 - Giữa thẻ tựa và thẻ phần đầu tiên phải có ≥ 1,5 s màn đen.
 - **Chỉ duyệt phần đã đổi:** `gfx stills` nhớ dấu của từng đồ họa (`stills/_hash.json`, gồm nội dung đồ họa và mã nguồn Remotion). Lần sau chỉ render và đưa vào `_review_N.jpg` những cái mới hoặc đã sửa; sửa `Film.jsx`/`Overlays.jsx` thì mọi khung được làm lại. Chỉ xem `_review_N.jpg`, không mở từng PNG. Thử trên phim 13: lần đầu 76 khung mất 3 phút; sửa một đồ họa thì 18 giây và một hàng ảnh để xem.
@@ -130,7 +133,7 @@ python doc.py 12 build            # timeline + overlays + edit, chạy khi lint 
 
 - **Lint trước, build sau.** `lint` chạy timeline, overlays, edit vào thư mục tạm (không đụng `05_Renders`), vẫn đi tiếp khi một bước hỏng nếu bước sau còn đầu vào, rồi kiểm tra mọi clip `px:`/`pb:` trong template đã tải và mọi file nhạc trong `audio_spec` có trong `07_Audio/music` hoặc kho nhạc. Mọi lỗi hiện trong một lần chạy, mỗi bước một dòng tóm tắt; thoát mã 1 khi còn lỗi. Thử trên phim 13 với 3 lỗi cài sẵn (cụm neo sai, clip chưa tải, file nhạc thiếu): bắt cả 3 trong một lần.
 
-- Độ dài cảnh: mục tiêu 3,6 s, trong khoảng 2,5–5 s. Điểm cắt được dời vào chỗ ngắt lời chỉ khi mọi cảnh vẫn nằm trong khoảng đó, nên cảnh không lúc quá nhanh lúc quá lâu.
+- Độ dài cảnh theo `edit.target/min/max` của style (`netflix-cold`: mục tiêu 3,6 s, trong khoảng 2,5–5 s). Điểm cắt được dời vào chỗ ngắt lời chỉ khi mọi cảnh vẫn nằm trong khoảng đó, nên cảnh không lúc quá nhanh lúc quá lâu.
 - Ảnh tĩnh luôn có chuyển động máy: đẩy vào, kéo ra, lia, hoặc cận vào vùng nhiều chi tiết nhất.
 
 ## 7. Âm thanh
@@ -162,12 +165,41 @@ python doc.py 12 audio preview    # bản trộn nghe thử (m4a)
 python doc.py 12 audio final      # final_mix.wav ở −14 LUFS
 ```
 
-- **Nhạc gần như liên tục, khoảng 15 dB dưới giọng.** Mục tiêu ≥ 85% thời lượng lời dẫn có nhạc. Bản Oymyakon đầu chỉ có 65% ở −21 dB và bị chê là "thiếu".
+- **Độ phủ và mức nhạc theo `rules.music_coverage` / `music_under_voice_db` của style**; `audio` và `lint` in độ phủ so với mục tiêu. Tính chất nhạc (nhạc cụ, bpm) cho prompt Suno lấy từ `notes.music` của style. Với `netflix-cold`: **nhạc gần như liên tục, khoảng 15 dB dưới giọng**, ≥ 85% thời lượng lời dẫn có nhạc. Bản Oymyakon đầu chỉ có 65% ở −21 dB và bị chê là "thiếu".
 - Nhạc đổi theo bước ngoặt của câu chuyện. Im lặng chỉ dùng như một nhịp có chủ ý.
 - Tiếng nền (động cơ, gió) phải nhỏ: động cơ diesel đặt khoảng −42 dB. Bản đầu của Oymyakon bị chê "động cơ quá to".
 - Kho nhạc: `02. Giọng đọc & Âm thanh - Voice & Audio\03. Nhạc nền Phim tài liệu - BGM Tracks` (danh mục `DANH_MUC_KHO_NHAC_BGM.md`, bản sao trên `Y:\Data Footage\Discovery\Kien\BGM_NoCopyright` là nơi `audio` chép file). Tiếng động: 1001 Sound Effects trên `Y:` và Freesound CC0.
 
-## 8. Dựng lên DaVinci Resolve, xem, góp ý, xuất bản cuối
+## 8. Dựng lên Adobe Premiere Pro (phim mới, mặc định từ 11/2026)
+
+Phim tạo bằng `doc.py new` có `"editor": "premiere"` trong `film.json`, nên `review` chạy `premiere`. Phim cũ (đến phim 15) vẫn ở Resolve (mục 8R) và không xuất lại.
+
+```
+python doc.py 16 premiere                      # Claude: 05_Renders/premiere/timeline.xml + mọi thứ nó cần (vài phút)
+python doc.py 16 qc "<file Premiere xuất ra>"  # Claude: QC trên bản cuối
+```
+
+**File `timeline.xml` (XML FCP7, Premiere đọc trực tiếp) tự đủ:**
+
+| Track | Nội dung |
+|---|---|
+| V1 | Mỗi cảnh một clip hoặc ảnh gốc, tên `S131 px:6831205`. Clip stock đúng điểm vào, phóng phủ khung; clip chậm dùng Time Remap; ảnh tĩnh có Ken Burns bằng keyframe Scale/Center |
+| V2 | **Để trống** cho adjustment layer gắn LUT grade |
+| V3 | Vignette (kèm viền letterbox nếu style có `letterbox`) · V4 đồ họa Remotion (nền trong suốt) · V5 lớp phủ HUD nếu phim có |
+| A1 | Từng câu thoại · A2 trở đi: nhạc rồi tiếng động, đã bake độ to, fade, ducking; tổng −14 LUFS |
+| Marker | Mỗi khối lời dẫn một marker, kèm nguyên văn câu thoại |
+
+**Người dùng làm:**
+1. **File › Import…**, chọn `05_Renders/premiere/timeline.xml`. Mở sequence trong bin mới (double-click).
+2. **Gắn màu, một lần:** **File › New › Adjustment Layer**, kéo lên **V2** phủ cả phim, rồi **Lumetri Color › Creative › Look** chọn `docpipe_<TÊN_PHIM>_grade`. LUT đã chép sẵn vào `%APPDATA%\Adobe\Common\LUTs\Creative`. Nếu không thấy, chọn Browse tới `05_Renders/premiere/grade.cube`.
+3. Xem, chỉnh, rồi xuất. Nếu engine báo true peak vượt −1 dBTP: trong Export bật **Effects › Loudness Normalization** (−14 LUFS, true peak −1).
+4. Gửi Claude đường dẫn file đã xuất để chạy `qc` và `credits`.
+
+**Ghi chú**
+- Vòng góp ý trên Premiere (đọc marker ra `REVIEW_NOTES.md`) chưa làm. Hiện tại người dùng tự sửa trên timeline.
+- Đã kiểm chứng trên phim 12 (11/2026): ảnh, slow-motion, đồ họa, âm thanh đều đúng. Track âm thanh stereo phải có `currentExplodedTrackIndex`/`totalExplodedTrackCount`, thiếu là Premiere bỏ hết âm thanh.
+
+## 8R. Dựng lên DaVinci Resolve (phim cũ), xem, góp ý, xuất bản cuối
 
 **Phân vai:** người dùng viết và sửa `Narration.md`, mở timeline Claude dựng sẵn trong Resolve, góp ý, rồi tự xuất bản cuối theo cấu hình mình muốn. Claude lo mọi thứ còn lại: kế hoạch hình, b-roll và ảnh, giọng đọc, nhạc và tiếng động, đồ họa motion, và dựng file timeline.
 

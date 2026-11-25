@@ -29,7 +29,7 @@ class Beats:
             self.words[i] = ws
 
     def __call__(self, spec):
-        m = re.fullmatch(r"([@^])([a-z]\d_\d\d)([+-][\d.]+)?", spec)
+        m = re.fullmatch(r"([@^])([a-z]\d+_\d\d)([+-][\d.]+)?", spec)
         if m:
             return self.line[m.group(2)]["start" if m.group(1) == "@" else "end"] + float(m.group(3) or 0)
         lid, phrase = spec.split(":", 1)

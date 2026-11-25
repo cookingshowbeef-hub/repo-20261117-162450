@@ -1,0 +1,33 @@
+{
+ "label": "Netflix lạnh (mặc định)",
+ "description": "Phim tài liệu kiểu Netflix: tối, lạnh, giảm bão hòa; chữ Jost mảnh giãn rộng + Georgia nghiêng; màu nhấn xanh băng; đồ họa dày; nhạc gần như liên tục.",
+ "timing": {"gap_line": 0.75, "gap_block": 1.8, "act_card": 5.5, "end_text": 20.0},
+ "edit": {"target": 3.6, "min": 2.5, "max": 5.0, "fade": 0.45},
+ "overlay": {"full_hold": 6.0},
+ "render": {"grade": {"contrast": 0.2, "lift": 3, "cool": 0.03, "warm": 0.0, "saturation": 0.9, "vignette": 0.22, "letterbox": 0}},
+ "audio": {"lufs": -14, "duck_db": 6},
+ "gfx": {
+  "palette": {"text": "#EEF1F4", "dim": "#AEB8C2", "accent": "#6FAEDB", "accent_text": "#A9D6F5", "danger": "#E0563F", "danger_text": "#EE6A50",
+              "warm": "#E8A15A", "bg": "#0B0E12", "land": "#1E252D", "sea": "#0B0E12"},
+  "fonts": {"sans": {"family": "Jost", "fallback": "sans-serif", "files": [{"file": "fonts/Jost-wght.ttf", "weight": "100 900"}]},
+            "serif": {"family": "Georgia", "fallback": "\"Times New Roman\", serif", "files": []},
+            "mono": {"family": "Courier New", "fallback": "monospace", "files": []}},
+  "fonts_vi": {"sans": {"family": "Be Vietnam Pro", "fallback": "sans-serif", "files": [
+                 {"file": "fonts/BeVietnamPro-Light.ttf", "weight": "300"}, {"file": "fonts/BeVietnamPro-Regular.ttf", "weight": "400"},
+                 {"file": "fonts/BeVietnamPro-SemiBold.ttf", "weight": "500 600"}, {"file": "fonts/BeVietnamPro-Bold.ttf", "weight": "700 900"}]},
+               "serif": {"family": "Lora", "fallback": "Georgia, serif", "files": [
+                 {"file": "fonts/Lora-Regular.ttf", "weight": "400", "style": "normal"}, {"file": "fonts/Lora-Italic.ttf", "weight": "400", "style": "italic"}]}},
+  "motion": {"ease_out": [0.16, 1, 0.3, 1], "ease_inout": [0.65, 0, 0.35, 1], "rise": {"dy": 22, "blur": 7, "len": 0.9}, "tracking": 1.0},
+  "text_shadow": "0 2px 22px rgba(0,0,0,0.75), 0 1px 3px rgba(0,0,0,0.6)",
+  "grain": 0.06,
+  "scrim": 1.0
+ },
+ "rules": {"gfx_per_min": [2.5, 3.0], "music_coverage": 0.85, "music_under_voice_db": 15, "suno_cues": [4, 6]},
+ "notes": {
+  "narration": "Giọng trầm, nghiêm, nhịp chậm (speed 0.95). Mở bằng cold open gây tò mò, rồi các ACT có thẻ tên phần.",
+  "broll": "Cảnh đẹp, điện ảnh, ưu tiên toàn cảnh và cận chi tiết; tránh stock quá 'quảng cáo'. Ảnh tĩnh luôn có chuyển động máy.",
+  "graphics": "Dày: map, stat, define, timeline, lower; chữ trắng ngà trên nền tối, màu nhấn chỉ cho số liệu/điểm chính.",
+  "music": "Score orchestral/ambient tối, cello, low strings, piano xa, synth pad; 60-80 bpm; đổi cue theo bước ngoặt.",
+  "sound": "Tiếng nền rất nhỏ (động cơ ~ -42 dB); whoosh/click nhẹ theo đồ họa."
+ }
+}

@@ -2,14 +2,11 @@
 // Every component gets {dur, at:[s...]} (beat times relative to its start) plus its own text props.
 import React from 'react';
 import {AbsoluteFill, Easing, interpolate, useCurrentFrame} from 'remotion';
+import {PAL, SANS, SERIF, MONO, OUT, INOUT, RISE, em, SH, GRAIN_K, SCRIM} from './style';
 
 const FPS = 30;
-const OUT = Easing.bezier(0.16, 1, 0.3, 1);
-const INOUT = Easing.bezier(0.65, 0, 0.35, 1);
 const k = (t, a, b, from = 0, to = 1, e = OUT) => interpolate(t, [a, b], [from, to], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: e});
-const BONE = '#EEF1F4', DIM = '#AEB8C2', RUST = '#6FAEDB', RED = '#D9533B', ACC = '#A9D6F5', RED_T = '#EE6A50';   // POLE OF COLD: ice-blue accent (RUST = accent lines)   // ACC/RED_T: accent text on footage
-const SANS = 'Jost, sans-serif', SERIF = 'Georgia, "Times New Roman", serif';
-const SH = '0 2px 22px rgba(0,0,0,0.75), 0 1px 3px rgba(0,0,0,0.6)';
+const BONE = PAL.text, DIM = PAL.dim, RUST = PAL.accent, RED = PAL.danger, ACC = PAL.accent_text, RED_T = PAL.danger_text;   // from the film's style (RUST = accent lines; ACC/RED_T = accent text on footage)
 const useT = () => useCurrentFrame() / FPS;
 
 // whole-overlay envelope
@@ -17,21 +14,21 @@ const Env = ({dur, children, fin = 0.35, fout = 0.5}) => {
   const t = useT();
   return <AbsoluteFill style={{opacity: Math.min(k(t, 0, fin, 0, 1, INOUT), 1 - k(t, dur - fout, dur, 0, 1, INOUT))}}>{children}</AbsoluteFill>;
 };
-const ScrimLeft = ({w = 64, o = 0.78}) => (
+const ScrimLeft = ({w = 64, o = 0.78 * SCRIM}) => (
   <AbsoluteFill style={{background: `linear-gradient(90deg, rgba(0,0,0,${o}) 0%, rgba(0,0,0,${o * 0.6}) ${w * 0.55}%, rgba(0,0,0,0) ${w}%)`}} />
 );
-const ScrimRight = ({o = 0.75}) => (
+const ScrimRight = ({o = 0.75 * SCRIM}) => (
   <AbsoluteFill style={{background: `linear-gradient(270deg, rgba(0,0,0,${o}) 0%, rgba(0,0,0,${o * 0.6}) 30%, rgba(0,0,0,0) 58%)`}} />
 );
-const ScrimTop = ({h = 330, o = 0.74}) => (
+const ScrimTop = ({h = 330, o = 0.74 * SCRIM}) => (
   <AbsoluteFill style={{background: `linear-gradient(180deg, rgba(0,0,0,${o}) 0px, rgba(0,0,0,${o}) ${h * 0.58}px, rgba(0,0,0,${o * 0.35}) ${h * 0.8}px, rgba(0,0,0,0) ${h}px)`}} />
 );
-const ScrimCenter = ({o = 0.55}) => (
+const ScrimCenter = ({o = 0.55 * SCRIM}) => (
   <AbsoluteFill style={{background: `radial-gradient(ellipse 70% 60% at 50% 50%, rgba(0,0,0,${o}) 0%, rgba(0,0,0,${o * 0.55}) 55%, rgba(0,0,0,${o * 0.25}) 100%)`}} />
 );
 
 // text that rises softly into place at time `at`
-const Rise = ({at = 0, children, style, dy = 22, blur = 7, len = 0.9}) => {
+const Rise = ({at = 0, children, style, dy = RISE.dy, blur = RISE.blur, len = RISE.len}) => {
   const t = useT();
   const u = k(t, at, at + len);
   return <div style={{opacity: u, transform: `translateY(${(1 - u) * dy}px)`, filter: `blur(${(1 - u) * blur}px)`, textShadow: SH, ...style}}>{children}</div>;
@@ -41,7 +38,7 @@ const Rule = ({at = 0, w = 80, color = RUST, style}) => {
   return <div style={{width: w * k(t, at, at + 0.8), height: 2, background: color, boxShadow: '0 1px 6px rgba(0,0,0,0.5)', ...style}} />;
 };
 const Kicker = ({at = 0, children, color = ACC, size = 26}) => (
-  <Rise at={at} style={{fontFamily: SANS, fontWeight: 500, fontSize: size, letterSpacing: '0.42em', color}}>{children}</Rise>
+  <Rise at={at} style={{fontFamily: SANS, fontWeight: 500, fontSize: size, letterSpacing: em(0.42), color}}>{children}</Rise>
 );
 
 // ---------------------------------------------------------------- dictionary entry
@@ -53,7 +50,7 @@ const Define = ({dur, at, word, pron, senses, lang = 'FILIPINO'}) => {
       <div style={{position: 'absolute', left: 120, top: 300, width: 900}}>
         <Kicker at={at[0] - 0.15}>{lang}</Kicker>
         <Rise at={at[0]} style={{fontFamily: SERIF, fontSize: 132, color: BONE, lineHeight: 1.1, marginTop: 10}}>{word}</Rise>
-        <Rise at={at[0] + 0.35} style={{fontFamily: SANS, fontSize: 30, color: DIM, letterSpacing: '0.18em'}}>/ {pron} /</Rise>
+        <Rise at={at[0] + 0.35} style={{fontFamily: SANS, fontSize: 30, color: DIM, letterSpacing: em(0.18)}}>/ {pron} /</Rise>
         <Rule at={at[0] + 0.5} w={90} style={{margin: '26px 0 26px'}} />
         {senses.map(([pos, txt], i) => {
           const a = (at[i] ?? at[0]) + (i === 0 ? 0.8 : 0.1);
@@ -80,9 +77,9 @@ const Stat = ({dur, at, big, sub, src, size = 150, red}) => (
     <div style={{position: 'absolute', left: 120, top: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: 1100}}>
       <Rule at={at[0]} w={70} color={red ? RED : RUST} style={{marginBottom: 22}} />
       <Rise at={at[0] + 0.05} dy={30} blur={10} len={1.0}
-        style={{fontFamily: SANS, fontWeight: 300, fontSize: size, color: red ? RED_T : BONE, lineHeight: 1.02, letterSpacing: '0.03em'}}>{big}</Rise>
+        style={{fontFamily: SANS, fontWeight: 300, fontSize: size, color: red ? RED_T : BONE, lineHeight: 1.02, letterSpacing: em(0.03)}}>{big}</Rise>
       <Rise at={at[0] + 0.45} style={{fontFamily: SERIF, fontStyle: 'italic', fontSize: 44, color: BONE, marginTop: 18, maxWidth: 980, lineHeight: 1.3}}>{sub}</Rise>
-      {src && <Rise at={at[0] + 0.9} style={{fontFamily: SANS, fontSize: 22, color: DIM, letterSpacing: '0.2em', marginTop: 18}}>SOURCE: {src}</Rise>}
+      {src && <Rise at={at[0] + 0.9} style={{fontFamily: SANS, fontSize: 22, color: DIM, letterSpacing: em(0.2), marginTop: 18}}>SOURCE: {src}</Rise>}
     </div>
   </Env>
 );
@@ -136,7 +133,7 @@ const Timeline = ({dur, at, marks, steps}) => {
           return (
             <g key={i} opacity={o}>
               <line x1={X(i)} y1={y - 9} x2={X(i)} y2={y + 9} stroke="rgba(238,231,219,0.7)" strokeWidth="2" />
-              <text x={X(i)} y={y - 24} textAnchor="middle" fontFamily="Jost" fontSize={24 + 4 * near} fill={near > 0.5 ? BONE : 'rgba(238,231,219,0.6)'}
+              <text x={X(i)} y={y - 24} textAnchor="middle" fontFamily={SANS} fontSize={24 + 4 * near} fill={near > 0.5 ? BONE : 'rgba(238,231,219,0.6)'}
                 letterSpacing="2" style={{filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.8))'}}>{yr}</text>
             </g>
           );
@@ -173,7 +170,7 @@ const Quote = ({dur, at, lines, by}) => (
       {lines.map((l, i) => (
         <Rise key={i} at={at[i] ?? at[0] + 0.5 + i * 0.9} style={{fontFamily: SERIF, fontStyle: 'italic', fontSize: 62, lineHeight: 1.35, color: BONE, textAlign: 'center'}}>{l}</Rise>
       ))}
-      {by && <Rise at={at[0] + 1.6} style={{fontFamily: SANS, fontSize: 22, letterSpacing: '0.3em', color: DIM, marginTop: 30}}>{by}</Rise>}
+      {by && <Rise at={at[0] + 1.6} style={{fontFamily: SANS, fontSize: 22, letterSpacing: em(0.3), color: DIM, marginTop: 30}}>{by}</Rise>}
     </AbsoluteFill>
   </Env>
 );
@@ -221,7 +218,7 @@ const Etym = ({dur, at, src, lang, gloss, dst}) => {
           <div style={{position: 'absolute', display: 'flex', top: 18}}>
             {[...dst].map((c, i) => {
               const u = k(t, at[2] + 0.25 + i * 0.07, at[2] + 0.85 + i * 0.07);
-              return <span key={i} style={{fontFamily: SANS, fontWeight: 300, fontSize: 124, color: ACC, letterSpacing: '0.12em', opacity: u, textShadow: SH,
+              return <span key={i} style={{fontFamily: SANS, fontWeight: 300, fontSize: 124, color: ACC, letterSpacing: em(0.12), opacity: u, textShadow: SH,
                 filter: `blur(${(1 - u) * 10}px)`, display: 'inline-block', transform: `translateY(${(1 - u) * 24}px)`}}>{c}</span>;
             })}
           </div>
@@ -255,7 +252,7 @@ const Daybook = ({dur, at, rows}) => {
             <div key={i} style={{display: 'flex', alignItems: 'center', gap: 44, opacity: fade}}>
               <Rise at={a} dy={30} blur={10} style={{fontFamily: SANS, fontWeight: 300, fontSize: 168, color: bad ? RED_T : BONE, minWidth: 380, lineHeight: 1}}>{amt}</Rise>
               <div>
-                <Rise at={a + 0.3} style={{fontFamily: SANS, fontWeight: 500, fontSize: 30, letterSpacing: '0.38em', color: bad ? RED_T : ACC}}>{lab}</Rise>
+                <Rise at={a + 0.3} style={{fontFamily: SANS, fontWeight: 500, fontSize: 30, letterSpacing: em(0.38), color: bad ? RED_T : ACC}}>{lab}</Rise>
                 <Rise at={a + 0.6} style={{fontFamily: SERIF, fontStyle: 'italic', fontSize: 38, color: BONE, marginTop: 10}}>{sub}</Rise>
               </div>
             </div>
@@ -280,16 +277,16 @@ const Parking = ({dur, at}) => {
       <ScrimLeft w={68} o={0.84} />
       <svg width="1920" height="1080" style={{position: 'absolute', left: 0, top: 0}}>
         <rect x={x} y={y} width={W} height={H} fill="none" stroke={BONE} strokeWidth="4" strokeDasharray={`${per * d} ${per}`} />
-        <g opacity={k(t, at[0] + 0.8, at[0] + 1.4)} fontFamily="Jost" fill={DIM} fontSize="26">
+        <g opacity={k(t, at[0] + 0.8, at[0] + 1.4)} fontFamily={SANS} fill={DIM} fontSize="26">
           <text x={x + W / 2} y={y - 22} textAnchor="middle">2.5 m</text>
           <text x={x - 22} y={y + H / 2} textAnchor="end" dominantBaseline="middle">5 m</text>
         </g>
         <rect x={x + (W - rw) / 2} y={y + H - rh - 30} width={rw} height={rh * r} fill={RUST} fillOpacity="0.5" stroke={RUST} strokeWidth="3" opacity={r > 0 ? 1 : 0} />
       </svg>
       <div style={{position: 'absolute', left: x + W + 60, top: y + 10, width: 560}}>
-        <Rise at={at[0] + 0.5} style={{fontFamily: SANS, fontWeight: 500, fontSize: 26, letterSpacing: '0.35em', color: BONE}}>A PARKING SPACE</Rise>
+        <Rise at={at[0] + 0.5} style={{fontFamily: SANS, fontWeight: 500, fontSize: 26, letterSpacing: em(0.35), color: BONE}}>A PARKING SPACE</Rise>
         <Rise at={at[0] + 0.8} style={{fontFamily: SERIF, fontStyle: 'italic', fontSize: 34, color: DIM, marginTop: 8}}>about 12.5 m²</Rise>
-        <Rise at={at[1] + 0.6} style={{fontFamily: SANS, fontWeight: 500, fontSize: 26, letterSpacing: '0.35em', color: ACC, marginTop: 150}}>ONE ROOM</Rise>
+        <Rise at={at[1] + 0.6} style={{fontFamily: SANS, fontWeight: 500, fontSize: 26, letterSpacing: em(0.35), color: ACC, marginTop: 150}}>ONE ROOM</Rise>
         <Rise at={at[1] + 0.9} style={{fontFamily: SERIF, fontStyle: 'italic', fontSize: 34, color: BONE, marginTop: 8}}>a whole family, smaller still</Rise>
       </div>
     </Env>
@@ -303,7 +300,7 @@ const Checks = ({dur, at, rows}) => (
     <div style={{position: 'absolute', left: 120, top: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 34}}>
       {rows.map(([lab, txt], i) => (
         <div key={i}>
-          <Rise at={at[i]} style={{fontFamily: SANS, fontWeight: 500, fontSize: 30, letterSpacing: '0.38em', color: ACC}}>{lab}</Rise>
+          <Rise at={at[i]} style={{fontFamily: SANS, fontWeight: 500, fontSize: 30, letterSpacing: em(0.38), color: ACC}}>{lab}</Rise>
           <Rule at={at[i] + 0.15} w={60} color="rgba(238,231,219,0.5)" style={{margin: '10px 0 10px'}} />
           <Rise at={at[i] + 0.3} style={{fontFamily: SERIF, fontStyle: 'italic', fontSize: 46, color: BONE}}>{txt}</Rise>
         </div>
@@ -332,7 +329,7 @@ const Process = ({dur, at, steps, at_step}) => {
             <g key={i}>
               <circle cx={X(i)} cy={y} r={cur ? 9 + 4 * on : 7} fill={on > 0.5 ? RUST : '#1a1816'} stroke={on > 0.5 ? RUST : 'rgba(238,231,219,0.55)'} strokeWidth="2" />
               {cur && <circle cx={X(i)} cy={y} r={13 + 16 * ((t * 0.9) % 1)} fill="none" stroke={RUST} strokeWidth="2" opacity={on * (1 - ((t * 0.9) % 1))} />}
-              <text x={X(i)} y={y + 52} textAnchor="middle" fontFamily="Jost" fontWeight={cur ? 500 : 400} fontSize={cur ? 30 : 22} letterSpacing={cur ? 6 : 4}
+              <text x={X(i)} y={y + 52} textAnchor="middle" fontFamily={SANS} fontWeight={cur ? 500 : 400} fontSize={cur ? 30 : 22} letterSpacing={cur ? 6 : 4}
                 fill={cur ? BONE : done ? 'rgba(238,231,219,0.7)' : 'rgba(238,231,219,0.35)'} opacity={cur ? 0.35 + 0.65 * on : 1}
                 style={{filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.85))'}}>{s}</text>
             </g>
@@ -386,7 +383,7 @@ const Clock = ({dur, at, items, big, sub}) => {
         ))}
       </div>
       <div style={{position: 'absolute', left: 120, top: 560}}>
-        <Rise at={at[4]} dy={30} blur={10} style={{fontFamily: SANS, fontWeight: 300, fontSize: 150, color: ACC, letterSpacing: '0.12em'}}>{big}</Rise>
+        <Rise at={at[4]} dy={30} blur={10} style={{fontFamily: SANS, fontWeight: 300, fontSize: 150, color: ACC, letterSpacing: em(0.12)}}>{big}</Rise>
         <Rise at={at[4] + 0.4} style={{fontFamily: SERIF, fontStyle: 'italic', fontSize: 44, color: BONE}}>{sub}</Rise>
       </div>
     </Env>
@@ -401,8 +398,8 @@ const Split = ({dur, at, left, right, mid}) => {
   return (
     <Env dur={dur}>
       <AbsoluteFill style={{background: 'rgba(0,0,0,0.45)'}} />
-      <div style={{...L(260 - g * 60)}}><Rise at={at[0]} style={{fontFamily: SANS, fontWeight: 300, fontSize: 130, letterSpacing: '0.2em', color: BONE}}>{left}</Rise></div>
-      <div style={{...L(960 + g * 60)}}><Rise at={at[0] + 0.5} style={{fontFamily: SANS, fontWeight: 300, fontSize: 130, letterSpacing: '0.2em', color: ACC}}>{right}</Rise></div>
+      <div style={{...L(260 - g * 60)}}><Rise at={at[0]} style={{fontFamily: SANS, fontWeight: 300, fontSize: 130, letterSpacing: em(0.2), color: BONE}}>{left}</Rise></div>
+      <div style={{...L(960 + g * 60)}}><Rise at={at[0] + 0.5} style={{fontFamily: SANS, fontWeight: 300, fontSize: 130, letterSpacing: em(0.2), color: ACC}}>{right}</Rise></div>
       <div style={{position: 'absolute', left: 959, top: 380 + 120 * (1 - k(t, at[0] + 0.3, at[0] + 1.1)), width: 2, height: 240 * k(t, at[0] + 0.3, at[0] + 1.1),
         background: 'rgba(238,231,219,0.7)'}} />
       <div style={{position: 'absolute', top: 660, width: 1920, textAlign: 'center'}}>
@@ -434,18 +431,18 @@ const Reloc = ({dur, at, a, a_sub, b, b_sub}) => {
         {back > 0.98 && <path d={`M${ax + 22},${y - 58} L${ax},${y - 46} L${ax + 22},${y - 34}`} stroke={RUST} strokeWidth="3" fill="none" />}
       </svg>
       <div style={{position: 'absolute', left: ax - 250, top: y + 50, width: 500, textAlign: 'center'}}>
-        <Rise at={at[0] + 0.2} style={{fontFamily: SANS, fontWeight: 500, fontSize: 34, letterSpacing: '0.35em', color: BONE}}>{a}</Rise>
+        <Rise at={at[0] + 0.2} style={{fontFamily: SANS, fontWeight: 500, fontSize: 34, letterSpacing: em(0.35), color: BONE}}>{a}</Rise>
         <Rise at={at[0] + 0.5} style={{fontFamily: SERIF, fontStyle: 'italic', fontSize: 32, color: DIM, marginTop: 6}}>{a_sub}</Rise>
       </div>
       <div style={{position: 'absolute', left: bx - 250, top: y + 50, width: 500, textAlign: 'center'}}>
-        <Rise at={at[1] + 1.3} style={{fontFamily: SANS, fontWeight: 500, fontSize: 34, letterSpacing: '0.35em', color: BONE}}>{b}</Rise>
+        <Rise at={at[1] + 1.3} style={{fontFamily: SANS, fontWeight: 500, fontSize: 34, letterSpacing: em(0.35), color: BONE}}>{b}</Rise>
         <Rise at={at[1] + 1.6} style={{fontFamily: SERIF, fontStyle: 'italic', fontSize: 32, color: DIM, marginTop: 6}}>{b_sub}</Rise>
       </div>
       <div style={{position: 'absolute', left: 660, width: 600, top: y + 40, textAlign: 'center', opacity: far * (1 - k(t, at[3] - 0.2, at[3] + 0.3))}}>
         <Rise at={at[2]} style={{fontFamily: SERIF, fontStyle: 'italic', fontSize: 40, color: RED_T}}>too far from any job</Rise>
       </div>
       <div style={{position: 'absolute', left: 660, width: 600, top: y - 130, textAlign: 'center'}}>
-        <Rise at={at[3] + 0.6} style={{fontFamily: SANS, fontWeight: 500, fontSize: 30, letterSpacing: '0.38em', color: ACC}}>AND CAME BACK</Rise>
+        <Rise at={at[3] + 0.6} style={{fontFamily: SANS, fontWeight: 500, fontSize: 30, letterSpacing: em(0.38), color: ACC}}>AND CAME BACK</Rise>
       </div>
     </Env>
   );

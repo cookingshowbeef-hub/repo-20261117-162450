@@ -2,12 +2,14 @@ import React, {useEffect, useState} from 'react';
 import {AbsoluteFill, Composition, continueRender, delayRender, registerRoot, staticFile} from 'remotion';
 import {FILM} from './Film';
 import {OVERLAYS} from './Overlays';
+import {FONT_FILES} from './style';
 
 const useFont = () => {
   const [h] = useState(() => delayRender('font'));
   useEffect(() => {
-    const f = new FontFace('Jost', `url(${staticFile('fonts/Jost-wght.ttf')})`, {weight: '100 900'});
-    f.load().then((x) => { document.fonts.add(x); continueRender(h); });
+    Promise.all(FONT_FILES.map((x) => new FontFace(x.family, `url(${staticFile(x.file)})`, {weight: x.weight || 'normal', style: x.style || 'normal'})
+      .load().then((f) => document.fonts.add(f))))
+      .catch((e) => console.error('font', e)).finally(() => continueRender(h));   // the style's fonts (public/fonts)
   }, [h]);
 };
 const Gfx = (p) => {

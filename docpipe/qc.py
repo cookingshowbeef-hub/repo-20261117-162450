@@ -88,7 +88,7 @@ def qc(P, args):
         if (s["block"], a) in blk:
             rep_blk.append(f"{s['id']} {a}")
         blk[(s["block"], a)] = 1
-        if a.split(":")[0] in ("px", "pb") and a in last and s["start"] - last[a] < E["clip_gap"]:
+        if a.split(":")[0] in ("px", "pb", "lk") and a in last and s["start"] - last[a] < E["clip_gap"]:
             gap.append(f"{s['id']} {a}")
         last[a] = s["start"]
     row(not rep_blk, "Same picture twice in a block", f"{len(rep_blk)} " + ", ".join(rep_blk[:5]), "none")
@@ -102,10 +102,11 @@ def qc(P, args):
     # pictures under a place caption must be from that place: a generic clip under a lower third is suspicious
     lows = [o for o in O if o["kind"] in ("lower",)]
     sus = []
+    LK = P.load("02_B-Roll", "local", "index.json", default={})
     for o in lows:
         for s in vis:
             k, ref = s["src"].split(":", 1)
-            man = PX if k == "px" else PB if k == "pb" else None
+            man = PX if k == "px" else PB if k == "pb" else LK if k == "lk" else None
             if man and s["start"] < o["end"] and s["end"] > o["start"] and man.get(ref, {}).get("where") == "generic":
                 sus.append(f"{s['id']} {s['src']} under “{o['p'].get('text', '')}”")
     row(not sus, "Generic clip under a caption", f"{len(sus)} " + "; ".join(sus), "the picture under a lower third must show what it names; never caption stock as a named place")

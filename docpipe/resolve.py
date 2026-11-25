@@ -241,10 +241,9 @@ LUT_DIR = r"C:\ProgramData\Blackmagic Design\DaVinci Resolve\Support\LUT\docpipe
 
 def grade_lut(P, path, n=33):
     """render.Renderer.grade without the vignette (S-curve per channel with the cool tint, then saturation) as a 3D .cube LUT."""
+    from .style import curve as style_curve
     g = P.cfg["render"]["grade"]
-    x = np.arange(256) / 255.0
-    lut = np.clip((0.8 * x + 0.2 * x * x * (3 - 2 * x)) * 255 + 3, 0, 255)
-    curve = {"b": np.clip(lut * (1 + g["cool"]), 0, 255), "g": lut, "r": np.clip(lut * (1 - g["cool"] * 2 / 3), 0, 255)}
+    curve = dict(zip("bgr", style_curve(g)))
     v = np.linspace(0, 255, n)
     f = lambda c, t: np.interp(t, np.arange(256), curve[c]) / 255.0
     lines = [f'TITLE "{P.cfg["title"]} grade"', f"LUT_3D_SIZE {n}", "DOMAIN_MIN 0 0 0", "DOMAIN_MAX 1 1 1"]
@@ -259,10 +258,9 @@ def grade_lut(P, path, n=33):
 
 
 def vignette_png(P, path, W, H):
-    """the renderer's vignette as black with alpha: laid over the shots, it darkens exactly as the render's multiply does."""
-    g = P.cfg["render"]["grade"]
-    yy, xx = np.mgrid[0:H, 0:W]
-    vig = 1 - g["vignette"] * np.clip(((xx - W / 2) / (W / 2)) ** 2 + ((yy - H / 2) / (H / 2)) ** 2 - 0.25, 0, 1.5) / 1.5
+    """the renderer's vignette (and letterbox) as black with alpha: laid over the shots, it darkens exactly as the render's multiply does."""
+    from .style import vignette
+    vig = vignette(P.cfg["render"]["grade"], W, H)                  # with the style's letterbox bars (alpha 255)
     a = np.round((1 - vig) * 255).astype(np.uint8)
     cv2.imencode(".png", np.dstack([np.zeros((H, W, 3), np.uint8), a]))[1].tofile(path)   # tofile: cv2.imwrite fails silently on non-ASCII paths
 
@@ -400,7 +398,7 @@ def level_to_target(P, R, items, lufs):
         tp += g
     over = tp > -1.0
     print(f"   audio: {I:.1f} LUFS before, scaled {g:+.1f} dB to {lufs} LUFS; true peak {tp:.1f} dBFS"
-          + (" — OVER -1 dBTP: in Resolve's Deliver page tick 'Normalize Audio Levels' (true peak -1), or put a limiter on the Fairlight main bus" if over else ""))
+          + (" — OVER -1 dBTP: Resolve: Deliver > 'Normalize Audio Levels' (true peak -1) or a limiter on the main bus; Premiere: Export > Effects > Loudness Normalization (true peak -1)" if over else ""))
 
 
 def review(P, args):
@@ -506,6 +504,8 @@ def review(P, args):
                 path = P.p("03_Images", "nasa", ref)
             elif kind == "file":
                 path = P.p(ref)
+            elif kind == "lk":
+                path = P.local(ref)
             else:
                 path = glob.glob(P.p("02_B-Roll", {"px": "pexels", "pb": "pixabay"}[kind], f"{ref}_*.mp4"))[0]
             if path.lower().endswith((".mp4", ".mov", ".webm", ".mkv")):

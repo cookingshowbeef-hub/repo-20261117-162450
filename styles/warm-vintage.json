@@ -1,0 +1,25 @@
+{
+ "extends": "netflix-cold",
+ "label": "Ấm cổ điển (lịch sử, hoài niệm)",
+ "description": "Màu ấm như phim nhựa, tương phản mềm, hạt phim rõ; tiêu đề serif Lora, màu nhấn hổ phách; cắt chậm hơn; nhạc piano/dây ấm.",
+ "timing": {"gap_line": 0.85, "gap_block": 2.0, "act_card": 6.0},
+ "edit": {"target": 4.4, "min": 3.0, "max": 6.0, "fade": 0.6},
+ "render": {"grade": {"contrast": 0.14, "lift": 9, "cool": 0.0, "warm": 0.045, "saturation": 0.82, "vignette": 0.3}},
+ "gfx": {
+  "palette": {"text": "#F3EADB", "dim": "#C2B39C", "accent": "#D9A55B", "accent_text": "#EBC488", "danger": "#B8543A", "danger_text": "#D4714F",
+              "warm": "#E2A65C", "bg": "#15110D", "land": "#2A231B", "sea": "#15110D"},
+  "fonts": {"sans": {"family": "Jost", "fallback": "sans-serif", "files": [{"file": "fonts/Jost-wght.ttf", "weight": "100 900"}]},
+            "serif": {"family": "Lora", "fallback": "Georgia, serif", "files": [
+              {"file": "fonts/Lora-Regular.ttf", "weight": "400", "style": "normal"}, {"file": "fonts/Lora-Italic.ttf", "weight": "400", "style": "italic"}]}},
+  "motion": {"ease_out": [0.25, 1, 0.5, 1], "rise": {"dy": 14, "blur": 10, "len": 1.3}, "tracking": 0.8},
+  "grain": 0.11
+ },
+ "rules": {"gfx_per_min": [1.8, 2.5], "music_coverage": 0.8, "music_under_voice_db": 16, "suno_cues": [4, 6]},
+ "notes": {
+  "narration": "Kể chuyện chậm, giàu hình ảnh, giọng ấm (speed 0.92).",
+  "broll": "Ưu tiên tư liệu lưu trữ, ảnh cũ (Commons), cảnh ánh vàng; ảnh tĩnh đẩy chậm kiểu Ken Burns.",
+  "graphics": "Ít hơn, thanh lịch: quote, define, timeline, lower; tránh HUD công nghệ.",
+  "music": "Solo piano, string quartet, accordion/guitar mộc, 55-75 bpm, ấm và hoài niệm.",
+  "sound": "Tiếng máy chiếu, gió, ambience thành phố cũ rất nhỏ."
+ }
+}

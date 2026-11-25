@@ -1,0 +1,60 @@
+{
+ "palette": {
+  "text": "#EEF1F4",
+  "dim": "#AEB8C2",
+  "accent": "#6FAEDB",
+  "accent_text": "#A9D6F5",
+  "danger": "#E0563F",
+  "danger_text": "#EE6A50",
+  "warm": "#E8A15A",
+  "bg": "#0B0E12",
+  "land": "#1E252D",
+  "sea": "#0B0E12"
+ },
+ "fonts": {
+  "sans": {
+   "family": "Jost",
+   "fallback": "sans-serif",
+   "files": [
+    {
+     "file": "fonts/Jost-wght.ttf",
+     "weight": "100 900"
+    }
+   ]
+  },
+  "serif": {
+   "family": "Georgia",
+   "fallback": "\"Times New Roman\", serif",
+   "files": []
+  },
+  "mono": {
+   "family": "Courier New",
+   "fallback": "monospace",
+   "files": []
+  }
+ },
+ "motion": {
+  "ease_out": [
+   0.16,
+   1,
+   0.3,
+   1
+  ],
+  "ease_inout": [
+   0.65,
+   0,
+   0.35,
+   1
+  ],
+  "rise": {
+   "dy": 22,
+   "blur": 7,
+   "len": 0.9
+  },
+  "tracking": 1.0
+ },
+ "text_shadow": "0 2px 22px rgba(0,0,0,0.75), 0 1px 3px rgba(0,0,0,0.6)",
+ "grain": 0.06,
+ "scrim": 1.0,
+ "style": "netflix-cold"
+}

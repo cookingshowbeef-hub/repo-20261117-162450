@@ -1,19 +1,17 @@
-// Film graphics (library from POLE OF COLD; change the palette below per film), 1920x1080 @30. Bone-white type, ice-blue accent, red for danger, film grain on full-frame cards.
+// Film graphics (library from POLE OF COLD; palette, fonts and motion come from the film's style via ./style), 1920x1080 @30. Bone-white type, ice-blue accent, red for danger, film grain on full-frame cards.
 // Every component gets {dur, at:[s...]} (beat times from its start, pinned to the narration) plus its own props.
 import React, {useEffect, useState} from 'react';
 import {AbsoluteFill, Easing, Img, Sequence, continueRender, delayRender, interpolate, random, staticFile, useCurrentFrame} from 'remotion';
+import {PAL, SANS, SERIF, MONO, OUT, INOUT, RISE, em, SH, GRAIN_K, SCRIM} from './style';
 
 const FPS = 30;
-const OUT = Easing.bezier(0.16, 1, 0.3, 1);
-const INOUT = Easing.bezier(0.65, 0, 0.35, 1);
 const k = (t, a, b, from = 0, to = 1, e = OUT) => interpolate(t, [a, b], [from, to], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: e});
-export const BONE = '#EEF1F4', DIM = '#AEB8C2', ICE = '#6FAEDB', ICE_T = '#A9D6F5', RED = '#E0563F', WARM = '#E8A15A', BG = '#0B0E12', LAND = '#1E252D', SEA = '#0B0E12';
-const SANS = 'Jost, sans-serif', SERIF = 'Georgia, "Times New Roman", serif';
-const SH = '0 2px 22px rgba(0,0,0,0.75), 0 1px 3px rgba(0,0,0,0.6)';
+export const BONE = PAL.text, DIM = PAL.dim, ICE = PAL.accent, ICE_T = PAL.accent_text, RED = PAL.danger, WARM = PAL.warm, BG = PAL.bg, LAND = PAL.land, SEA = PAL.sea;   // from the film's style
 const useT = () => useCurrentFrame() / FPS;
 const fadeOut = (t, dur, len = 0.6) => 1 - k(t, dur - len, dur, 0, 1, INOUT);
 
-const Grain = ({o = 0.06}) => {
+const Grain = ({o: o0 = 0.06}) => {
+  const o = o0 * GRAIN_K;
   const seed = Math.floor(useCurrentFrame() / 2);
   return (
     <AbsoluteFill style={{pointerEvents: 'none'}}>
@@ -25,25 +23,25 @@ const Grain = ({o = 0.06}) => {
     </AbsoluteFill>
   );
 };
-const Rise = ({at = 0, children, style, dy = 22, blur = 7, len = 0.9}) => {
+const Rise = ({at = 0, children, style, dy = RISE.dy, blur = RISE.blur, len = RISE.len}) => {
   const u = k(useT(), at, at + len);
   return <div style={{opacity: u, transform: `translateY(${(1 - u) * dy}px)`, filter: `blur(${(1 - u) * blur}px)`, textShadow: SH, ...style}}>{children}</div>;
 };
 const Rule = ({at = 0, w = 80, color = ICE, style}) => <div style={{width: w * k(useT(), at, at + 0.8), height: 2, background: color, ...style}} />;
 const Kicker = ({at = 0, children, color = ICE_T, size = 26}) => (
-  <Rise at={at} style={{fontFamily: SANS, fontWeight: 500, fontSize: size, letterSpacing: '0.42em', color}}>{children}</Rise>
+  <Rise at={at} style={{fontFamily: SANS, fontWeight: 500, fontSize: size, letterSpacing: em(0.42), color}}>{children}</Rise>
 );
 const Env = ({dur, children, fin = 0.4, fout = 0.5, bg}) => {
   const t = useT();
   return <AbsoluteFill style={{background: bg, opacity: Math.min(k(t, 0, fin, 0, 1, INOUT), 1 - k(t, dur - fout, dur, 0, 1, INOUT))}}>{children}</AbsoluteFill>;
 };
-const ScrimLeft = ({w = 62, o = 0.78}) => (
+const ScrimLeft = ({w = 62, o = 0.78 * SCRIM}) => (
   <AbsoluteFill style={{background: `linear-gradient(90deg, rgba(0,0,0,${o}) 0%, rgba(0,0,0,${o * 0.6}) ${w * 0.55}%, rgba(0,0,0,0) ${w}%)`}} />
 );
-const ScrimRight = ({o = 0.78}) => (
+const ScrimRight = ({o = 0.78 * SCRIM}) => (
   <AbsoluteFill style={{background: `linear-gradient(270deg, rgba(0,0,0,${o}) 0%, rgba(0,0,0,${o * 0.6}) 32%, rgba(0,0,0,0) 60%)`}} />
 );
-const ScrimTop = ({o = 0.7}) => (
+const ScrimTop = ({o = 0.7 * SCRIM}) => (
   <AbsoluteFill style={{background: `linear-gradient(180deg, rgba(0,0,0,${o}) 0px, rgba(0,0,0,${o}) 160px, rgba(0,0,0,0) 330px)`}} />
 );
 
@@ -98,7 +96,7 @@ const Stamp = ({dur, at, text}) => {
   return (
     <Env dur={dur}>
       <div style={{position: 'absolute', left: 96, top: 82, padding: '12px 22px', border: `2px solid rgba(238,241,244,0.7)`, background: 'rgba(0,0,0,0.55)',
-        fontFamily: '"Courier New", monospace', fontSize: 30, letterSpacing: '0.12em', color: BONE, opacity: k(t, at[0] - 0.2, at[0] + 0.2)}}>
+        fontFamily: MONO, fontSize: 30, letterSpacing: em(0.12), color: BONE, opacity: k(t, at[0] - 0.2, at[0] + 0.2)}}>
         {text.slice(0, n)}<span style={{opacity: (t * 2) % 1 < 0.5 ? 1 : 0}}>▍</span>
       </div>
     </Env>
@@ -144,7 +142,7 @@ const MapView = ({dur, at, map, cam, region, overlay, lines = [], pts = [], capt
             return <ellipse key={i} cx={x} cy={y} rx={(120 + i * 95) * k(t, A(isobars.at) + i * 0.25, A(isobars.at) + i * 0.25 + 1.2)} ry={(80 + i * 66) * k(t, A(isobars.at) + i * 0.25, A(isobars.at) + i * 0.25 + 1.2)}
               fill="none" stroke={ICE_T} strokeWidth={sw(2)} opacity={0.75 - i * 0.12} />;
           })}
-          {isobars && <text x={g.pts[isobars.center][0]} y={g.pts[isobars.center][1] + 30 / z} textAnchor="middle" fontFamily="Jost" fontWeight="500"
+          {isobars && <text x={g.pts[isobars.center][0]} y={g.pts[isobars.center][1] + 30 / z} textAnchor="middle" fontFamily={SANS} fontWeight="500"
             fontSize={84 / z} fill={ICE_T} opacity={k(t, A(isobars.at), A(isobars.at) + 0.8)}>H</text>}
           {overlay && g.overlay && (() => {                          // slide: the outline travels in from the east and settles
             const u = overlay.slide ? k(t, A(overlay.at), A(overlay.at) + 2.0, 0, 1, Easing.bezier(0.2, 0, 0.1, 1)) : 1;
@@ -243,7 +241,7 @@ const Daylight = ({dur, at, hours, label, sub, warm}) => {
         <circle cx={cx} cy={cy} r={r} fill="rgba(5,8,12,0.75)" stroke="rgba(238,241,244,0.4)" strokeWidth="2" />
         {h > 0.05 && <path d={`M${cx},${cy} L${x0},${y0} A${r},${r} 0 ${h > 12 ? 1 : 0} 1 ${x1},${y1} Z`} fill={warm ? WARM : '#F2D58A'} opacity="0.85" />}
         {[0, 6, 12, 18].map((q) => { const a = ((q - 12) / 24) * 2 * Math.PI; const [x, y] = [cx + (r + 40) * Math.sin(a), cy - (r + 40) * Math.cos(a)];
-          return <text key={q} x={x} y={y + 9} textAnchor="middle" fontFamily="Jost" fontSize="24" fill={DIM}>{['midnight', '6 am', 'noon', '6 pm'][q / 6]}</text>; })}
+          return <text key={q} x={x} y={y + 9} textAnchor="middle" fontFamily={SANS} fontSize="24" fill={DIM}>{['midnight', '6 am', 'noon', '6 pm'][q / 6]}</text>; })}
       </svg>
       <div style={{position: 'absolute', left: cx - 300, width: 600, top: cy + r + 70, textAlign: 'center'}}>
         <Rise at={at[0] + 0.4} style={{fontFamily: SANS, fontWeight: 300, fontSize: 72, color: BONE}}>{label}</Rise>
@@ -281,7 +279,7 @@ const Bowl = ({dur, at, label, elev}) => {
           <line x1={x - 6} y1={prof(x) - 34} x2={x - 6} y2={prof(x) - 120} stroke="rgba(238,241,244,0.5)" strokeWidth="5" strokeLinecap="round" /></g>)}
       </svg>
       <div style={{position: 'absolute', left: 820, top: prof(960) + 24, width: 280, textAlign: 'center'}}>
-        <Rise at={at[0] + 0.8} style={{fontFamily: SANS, fontWeight: 500, fontSize: 28, letterSpacing: '0.3em', color: BONE}}>{label}</Rise>
+        <Rise at={at[0] + 0.8} style={{fontFamily: SANS, fontWeight: 500, fontSize: 28, letterSpacing: em(0.3), color: BONE}}>{label}</Rise>
         <Rise at={at[0] + 1.1} style={{fontFamily: SERIF, fontStyle: 'italic', fontSize: 28, color: DIM}}>{elev}</Rise></div>
       <div style={{position: 'absolute', left: 110, top: 90}}>
         <Rise at={at[1] ?? 2} style={{fontFamily: SERIF, fontStyle: 'italic', fontSize: 40, color: BONE}}>cold air is heavy</Rise>
@@ -301,7 +299,7 @@ const Records = ({dur, at, rows, note}) => (
       {rows.map(([place, temp, date, color], i) => (
         <div key={i} style={{display: 'flex', alignItems: 'baseline', justifyContent: 'flex-end', gap: 30}}>
           <div style={{textAlign: 'right'}}>
-            <Rise at={at[i]} style={{fontFamily: SANS, fontWeight: 500, fontSize: 30, letterSpacing: '0.32em', color: color || ICE_T}}>{place}</Rise>
+            <Rise at={at[i]} style={{fontFamily: SANS, fontWeight: 500, fontSize: 30, letterSpacing: em(0.32), color: color || ICE_T}}>{place}</Rise>
             <Rise at={at[i] + 0.2} style={{fontFamily: SERIF, fontStyle: 'italic', fontSize: 28, color: DIM}}>{date}</Rise></div>
           <Rise at={at[i] + 0.1} dy={30} blur={10} style={{fontFamily: SANS, fontWeight: 300, fontSize: 104, color: BONE, minWidth: 330, textAlign: 'right'}}>{temp}</Rise>
         </div>))}
@@ -321,7 +319,7 @@ const Thermo = ({dur, at, marks, band}) => {
       <svg width="1920" height="1080" style={{position: 'absolute'}}>
         <line x1={x} y1={y(0)} x2={x} y2={y(0) + (y(-100) - y(0)) * k(t, 0, 1.2, 0, 1, INOUT)} stroke={BONE} strokeWidth="3" />
         {[0, -20, -40, -60, -80, -100].map((c) => <g key={c} opacity={k(t, 0.4, 1)}><line x1={x - 14} y1={y(c)} x2={x} y2={y(c)} stroke={BONE} strokeWidth="2" />
-          <text x={x - 24} y={y(c) + 8} textAnchor="end" fontFamily="Jost" fontSize="24" fill={DIM}>{c}°</text></g>)}
+          <text x={x - 24} y={y(c) + 8} textAnchor="end" fontFamily={SANS} fontSize="24" fill={DIM}>{c}°</text></g>)}
         {band && <rect x={x + 6} y={y(band.from)} width="26" height={(y(band.to) - y(band.from)) * k(t, at[band.i], at[band.i] + 0.8)} fill={WARM} opacity="0.75" />}
         {marks.map((m, i) => <g key={i} opacity={k(t, at[m.i], at[m.i] + 0.5)}><circle cx={x} cy={y(m.c)} r="11" fill={m.color || ICE_T} />
           <line x1={x + 16} y1={y(m.c)} x2={x + 70} y2={y(m.c)} stroke={m.color || ICE_T} strokeWidth="2" /></g>)}
@@ -368,7 +366,7 @@ const Engine = ({dur, at, labels}) => {
       </svg>
       {labels.map((l, i) => (
         <div key={i} style={{position: 'absolute', left: [700, 1590, 1600][i], top: [330, 430, 690][i]}}>
-          <Rise at={at[i]} style={{fontFamily: SANS, fontWeight: 500, fontSize: 32, letterSpacing: '0.18em', color: i === 2 ? RED : ICE_T}}>{l[0]}</Rise>
+          <Rise at={at[i]} style={{fontFamily: SANS, fontWeight: 500, fontSize: 32, letterSpacing: em(0.18), color: i === 2 ? RED : ICE_T}}>{l[0]}</Rise>
           <Rise at={at[i] + 0.25} style={{fontFamily: SERIF, fontStyle: 'italic', fontSize: 28, color: BONE}}>{l[1]}</Rise></div>))}
     </Env>
   );
@@ -396,8 +394,8 @@ const Permafrost = ({dur, at, labels, mode}) => {
         </g>
         <line x1="0" y1={ground} x2="1920" y2={ground} stroke={BONE} strokeWidth="2" opacity="0.6" />
       </svg>
-      <div style={{position: 'absolute', left: 110, top: ground + 20}}><Rise at={at[0]} style={{fontFamily: SANS, fontWeight: 500, fontSize: 28, letterSpacing: '0.3em', color: WARM}}>{labels[0]}</Rise></div>
-      <div style={{position: 'absolute', left: 110, top: active + 30}}><Rise at={at[0] + 0.6} style={{fontFamily: SANS, fontWeight: 500, fontSize: 28, letterSpacing: '0.3em', color: ICE_T}}>{labels[1]}</Rise></div>
+      <div style={{position: 'absolute', left: 110, top: ground + 20}}><Rise at={at[0]} style={{fontFamily: SANS, fontWeight: 500, fontSize: 28, letterSpacing: em(0.3), color: WARM}}>{labels[0]}</Rise></div>
+      <div style={{position: 'absolute', left: 110, top: active + 30}}><Rise at={at[0] + 0.6} style={{fontFamily: SANS, fontWeight: 500, fontSize: 28, letterSpacing: em(0.3), color: ICE_T}}>{labels[1]}</Rise></div>
       {labels[2] && <div style={{position: 'absolute', left: 110, top: 90}}><Rise at={at[1] ?? 2} style={{fontFamily: SERIF, fontStyle: 'italic', fontSize: 44, color: BONE}}>{labels[2]}</Rise></div>}
       <Grain o={0.05} />
     </Env>
@@ -414,7 +412,7 @@ const Threshold = ({dur, at, rows, now}) => {
       <div style={{position: 'absolute', left: 980, top: 300}}><Kicker at={at[0]}>THE SCHOOL STAYS OPEN UNTIL</Kicker></div>
       <svg width="1920" height="1080" style={{position: 'absolute'}}>
         {[-40, -45, -50, -55, -60].map((c) => <g key={c} opacity={k(t, at[0], at[0] + 0.6)}><line x1={x(c)} y1="400" x2={x(c)} y2="700" stroke="rgba(238,241,244,0.2)" />
-          <text x={x(c)} y="740" textAnchor="middle" fontFamily="Jost" fontSize="24" fill={DIM}>{c}°</text></g>)}
+          <text x={x(c)} y="740" textAnchor="middle" fontFamily={SANS} fontSize="24" fill={DIM}>{c}°</text></g>)}
         {rows.map(([lab, c], i) => <rect key={i} x={x(-40)} y={440 + i * 120} height="64" width={(x(c) - x(-40)) * k(t, at[i] + 0.2, at[i] + 1.2, 0, 1, INOUT)} fill={i ? ICE : ICE_T} opacity="0.85" />)}
         {now != null && <line x1={x(now)} y1="400" x2={x(now)} y2="700" stroke={RED} strokeWidth="3" strokeDasharray="8 8" opacity={k(t, at[rows.length] ?? at[0] + 2, (at[rows.length] ?? at[0] + 2) + 0.5)} />}
       </svg>
@@ -460,7 +458,7 @@ const Range = ({dur, at, lo, hi, label}) => {
         <defs><linearGradient id="rng" x1="0" x2="1"><stop offset="0" stopColor="#3D7FC0" /><stop offset="0.62" stopColor="#B9C7D3" /><stop offset="1" stopColor={RED} /></linearGradient></defs>
         <rect x={x(lo[0])} y="760" height="26" width={(x(hi[0]) - x(lo[0])) * u} fill="url(#rng)" rx="13" />
         <line x1={x(0)} y1="740" x2={x(0)} y2="806" stroke={BONE} strokeWidth="2" opacity={k(t, at[0], at[0] + 0.5)} />
-        <text x={x(0)} y="842" textAnchor="middle" fontFamily="Jost" fontSize="24" fill={DIM} opacity={k(t, at[0], at[0] + 0.5)}>0°</text>
+        <text x={x(0)} y="842" textAnchor="middle" fontFamily={SANS} fontSize="24" fill={DIM} opacity={k(t, at[0], at[0] + 0.5)}>0°</text>
       </svg>
       <div style={{position: 'absolute', left: x(lo[0]) - 10, top: 650}}><Rise at={at[0]} style={{fontFamily: SANS, fontWeight: 300, fontSize: 64, color: ICE_T}}>{lo[1]}</Rise></div>
       <div style={{position: 'absolute', left: x(hi[0]) - 220, width: 260, textAlign: 'right', top: 650}}><Rise at={at[0] + 2.2} style={{fontFamily: SANS, fontWeight: 300, fontSize: 64, color: WARM}}>{hi[1]}</Rise></div>
@@ -479,11 +477,11 @@ const Bars = ({dur, at, rows, sub}) => {
       <div style={{position: 'absolute', left: 120, top: 330, width: 900}}>
         {rows.map(([lab, v, txt], i) => (
           <div key={i} style={{marginBottom: 44}}>
-            <Rise at={at[i]} style={{fontFamily: SANS, fontWeight: 500, fontSize: 28, letterSpacing: '0.3em', color: i ? RED : DIM}}>{lab}</Rise>
+            <Rise at={at[i]} style={{fontFamily: SANS, fontWeight: 500, fontSize: 28, letterSpacing: em(0.3), color: i ? RED : DIM}}>{lab}</Rise>
             <div style={{height: 46, marginTop: 12, width: 760 * (v / mx) * k(t, at[i] + 0.2, at[i] + 1.6, 0, 1, INOUT), background: i ? RED : DIM}} />
             <Rise at={at[i] + 1.2} style={{fontFamily: SERIF, fontStyle: 'italic', fontSize: 32, color: BONE, marginTop: 8}}>{txt}</Rise>
           </div>))}
-        <Rise at={at[rows.length] ?? at[0] + 3} style={{fontFamily: SANS, fontSize: 22, letterSpacing: '0.2em', color: DIM}}>{sub}</Rise>
+        <Rise at={at[rows.length] ?? at[0] + 3} style={{fontFamily: SANS, fontSize: 22, letterSpacing: em(0.2), color: DIM}}>{sub}</Rise>
       </div>
     </Env>
   );

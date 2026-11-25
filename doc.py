@@ -1,9 +1,11 @@
 """Documentary pipeline: one command per step, run on a project folder.
 
-  python doc.py new "<folder name>" "<FILM TITLE>"     new project in 04. Dự án đang Edit (from templates/)
+  python doc.py new "<folder name>" "<FILM TITLE>" [style]   new project in 04. Dự án đang Edit (from templates/), style default netflix-cold
+  python doc.py styles                                 the edit styles in styles/ (docs/STYLES.md)
   python doc.py <project> <step> [args]
 
 Steps, in order (see docs/QUY_TRINH.md):
+  style [set <name>] the film's style and the settings it gives; set = write film.json "style"
   voice [ids]        narration markdown -> voice lines + word timings           (01_Voice)
   timeline           lines on the film clock                                     (05_Renders/timeline.json)
   script             readable script with V.O. text and numbered GFX             (04_Scripts_Code/<title>_Script.md)
@@ -16,6 +18,7 @@ Steps, in order (see docs/QUY_TRINH.md):
   render [a b]       the film, or a section                                      (05_Renders/<output>, tests/section_a_b.mp4)
   patch a b [a b]    re-render sections into the existing film (~10 min, not a full render)
   review [--rendered]  DaVinci Resolve review timeline from the source files, no render (05_Renders/review/timeline.fcpxml)
+  premiere [--no-hud]  Adobe Premiere Pro timeline, built in full (05_Renders/premiere/timeline.xml); film.json "editor": "premiere" makes `review` do this
   notes <file.edl>   Resolve's exported markers -> 05_Renders/review/REVIEW_NOTES.md (each note mapped to shot, graphic, line)
   push               put it into the running Resolve: shots, graphics, audio on named tracks, block markers (needs the bridge)
   pull               read the comment markers straight from Resolve -> REVIEW_NOTES.md
@@ -88,6 +91,9 @@ def gfx(P, args):
     node = (setting("REMOTION_NODE") or next((n for n in (os.path.join(os.path.expanduser("~"), "AppData", "Local", "ms-playwright-go", "1.57.0", "node.exe"),) if os.path.exists(n)), None)
             or shutil.which("node") or sys.exit("no node.exe: install Node.js 20+ or set REMOTION_NODE"))
     rem = P.p("06_Graphics", "remotion")
+    from docpipe.style import write_gfx
+    if write_gfx(P):                               # the film's style -> src/style.json (palette, fonts, motion)
+        print(f"gfx: style {P.cfg.get('style') or '(none)'} -> 06_Graphics/remotion/src/style.json")
     env = dict(os.environ, DOC_OUT=P.renders)
     if args[:1] == ["stills"]:                     # only new or changed graphics, then one review sheet of just those
         force = "--all" in args
@@ -109,19 +115,22 @@ def gfx(P, args):
 
 def main():
     sys.stdout.reconfigure(encoding="utf-8")
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 3 and sys.argv[1:] != ["styles"]:
         sys.exit(__doc__)
+    if sys.argv[1] == "styles":
+        from docpipe.style import list_styles
+        return list_styles()
     if sys.argv[1] == "new":
         from docpipe.newproject import create
         return create(ACTIVE, *sys.argv[2:])
     from docpipe.ctx import Project
-    from docpipe import voice, timeline, overlays, edit, audio, render, qc, media, resolve, music
+    from docpipe import voice, timeline, overlays, edit, audio, render, qc, media, resolve, music, premiere, style
     P = Project(find(sys.argv[1]))
     step, args = sys.argv[2], sys.argv[3:]
     steps = {"voice": voice.run, "voicetrack": voice.track, "timeline": timeline.run, "script": timeline.script, "overlays": overlays.run,
              "gfx": gfx, "edit": edit.run, "music": music.run, "audio": audio.run, "render": render.run, "patch": render.patch, "credits": qc.credits, "qc": qc.qc,
              "search": media.search, "pick": media.pick, "fetch": media.fetch, "commons": media.commons, "sheets": media.sheets,
-             "freesound": media.freesound, "review": resolve.review, "notes": resolve.notes, "push": resolve.push, "pull": resolve.pull}
+             "freesound": media.freesound, "review": premiere.premiere if P.cfg.get("editor") == "premiere" else resolve.review, "premiere": premiere.premiere, "notes": resolve.notes, "push": resolve.push, "pull": resolve.pull, "style": style.run}
     if step == "lint":
         from docpipe import lint
         return lint.run(P, args)

@@ -118,7 +118,9 @@ def run(P, args):
         plan["sfx"].append(dict(file=rel, t_in=round(a, 2), t_out=None if b is None else round(b, 2), offset=off, fade_in=fi, fade_out=fo, level_db=g, note=note))
     json.dump(plan, open(os.path.join(OUT, "audio_plan.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     cover = coverage(P, plan)
-    print(f"{len(spec.MUSIC)} music cues, {len(sfx)} sound effects -> 07_Audio | music under {cover * 100:.0f}% of the narration")
+    want = P.cfg.get("rules", {}).get("music_coverage")
+    print(f"{len(spec.MUSIC)} music cues, {len(sfx)} sound effects -> 07_Audio | music under {cover * 100:.0f}% of the narration"
+          + (f" (style {P.cfg.get('style') or 'default'} wants >= {want * 100:.0f}%)" if want is not None else ""))
     if "preview" in args or "final" in args:
         mix(P, plan, final="final" in args)
 

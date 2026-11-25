@@ -1,0 +1,23 @@
+{
+ "extends": "netflix-cold",
+ "label": "Noir / true crime",
+ "description": "Gần đen trắng, tương phản cao, letterbox 2.39; chữ mono kiểu hồ sơ, màu nhấn đỏ; cắt chậm, nhiều khoảng lặng; nhạc drone căng.",
+ "timing": {"gap_line": 0.9, "gap_block": 2.2, "act_card": 6.5},
+ "edit": {"target": 4.2, "min": 2.8, "max": 6.0, "fade": 0.5},
+ "render": {"grade": {"contrast": 0.34, "lift": 1, "cool": 0.05, "warm": 0.0, "saturation": 0.45, "vignette": 0.34, "letterbox": 2.39}},
+ "gfx": {
+  "palette": {"text": "#E9E9E6", "dim": "#9A9A96", "accent": "#C8302B", "accent_text": "#E0524C", "danger": "#C8302B", "danger_text": "#E0524C",
+              "warm": "#C9A15A", "bg": "#080808", "land": "#1C1C1C", "sea": "#080808"},
+  "fonts": {"serif": {"family": "Courier New", "fallback": "monospace", "files": []}},
+  "motion": {"rise": {"dy": 0, "blur": 12, "len": 1.1}, "tracking": 1.2},
+  "grain": 0.09
+ },
+ "rules": {"gfx_per_min": [1.8, 2.5], "music_coverage": 0.7, "music_under_voice_db": 17, "suno_cues": [4, 6]},
+ "notes": {
+  "narration": "Giọng thấp, chậm, nhiều nhịp nghỉ có chủ ý (speed 0.9).",
+  "broll": "Cảnh đêm, đèn đường, tài liệu, bản đồ hồ sơ; tránh cảnh rực rỡ.",
+  "graphics": "Stamp, timeline, quote, map; chữ mono như hồ sơ vụ án; đỏ chỉ cho điểm then chốt.",
+  "music": "Dark ambient drone, low piano hits, pulsing synth, 50-70 bpm, căng và lạnh; để khoảng lặng.",
+  "sound": "Tiếng đồng hồ, máy đánh chữ, mưa nhẹ, rất nhỏ."
+ }
+}

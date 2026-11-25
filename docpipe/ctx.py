@@ -53,6 +53,10 @@ DEFAULTS = {
     "credits": {"intro": "Narration: AI voice. Footage and photographs are licensed stock, archival or public-domain material; no interviews were filmed.",
                 "music": "Kevin MacLeod (incompetech.com)", "music_licence": "Creative Commons: By Attribution 4.0 License. http://creativecommons.org/licenses/by/4.0/",
                 "extra": []},
+    "style": None,                        # styles/<name>.json layered between these defaults and film.json (docpipe/style.py)
+    "gfx": {},                            # Remotion palette/fonts/motion (from the style; film.json may override)
+    "rules": {"gfx_per_min": [2.5, 3.0], "music_coverage": 0.85, "music_under_voice_db": 15, "suno_cues": [4, 6]},
+    "notes": {},
     "commons_user_agent": "DocResearch/1.0 (documentary research script) python-requests",
 }
 
@@ -71,7 +75,9 @@ class Project:
         cfg = os.path.join(self.code, "film.json")
         if not os.path.exists(cfg):
             sys.exit(f"no film.json in {self.code}")
-        self.cfg = _merge(DEFAULTS, json.load(open(cfg, encoding="utf-8")))
+        raw = json.load(open(cfg, encoding="utf-8"))
+        from . import style                        # DEFAULTS <- styles/<film.json "style">.json <- film.json
+        self.cfg = _merge(_merge(DEFAULTS, style.layer(raw.get("style"))), raw)
         self.renders = os.environ.get("DOC_OUT") or os.path.join(self.root, "05_Renders")
         os.makedirs(self.renders, exist_ok=True)
         if self.code not in sys.path:
@@ -118,11 +124,21 @@ class Project:
     def timeline(self):
         return self.load_out("timeline.json")
 
+    def local(self, ref):
+        """lk:<id> -> absolute path of a clip/image on this machine (02_B-Roll/local/index.json: {id: {"path": ...}} or {id: path}).
+        For footage libraries whose paths hold spaces or Vietnamese, which a file: code cannot carry."""
+        if not hasattr(self, "_local"):
+            self._local = self.load("02_B-Roll", "local", "index.json", default={})
+        v = self._local.get(ref)
+        if v is None:
+            sys.exit(f"lk:{ref} is not in 02_B-Roll/local/index.json")
+        return v["path"] if isinstance(v, dict) else v
+
     def words(self, line_id):
         return json.load(open(self.p("01_Voice", "lines", f"{line_id}.words.json"), encoding="utf-8"))
 
 
-VO = re.compile(r"\{\{((?:[a-z]\d_\d\d ?)+)\}\}")         # {{c0_01 c0_02}} = one V.O. block
+VO = re.compile(r"\{\{((?:[a-z]\d+_\d\d ?)+)\}\}")         # {{c0_01 c0_02}} = one V.O. block
 
 
 KEYS_FILE = os.environ.get("DOCPIPE_KEYS") or os.path.join(os.path.expanduser("~"), ".docpipe", "keys.env")
