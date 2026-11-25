@@ -4,7 +4,7 @@
 
 Engine dùng chung, rút từ các phim **Aral V2**, **Pagpag** và **Oymyakon**, rồi bổ sung qua các phim sau: lời dẫn AI (ElevenLabs qua AI33), b-roll từ stock miễn phí và Wikimedia Commons, đồ họa Remotion, nhạc Suno qua AI33 cùng kho nhạc có sẵn, timeline dựng sẵn cho Adobe Premiere Pro (phim mới) hoặc DaVinci Resolve (phim cũ) để người dùng xem, chỉnh và xuất. Xuất 1080p.
 
-- **Bắt đầu một phim:** `python doc.py new "14. Tên phim (20 Phút) - slug" "FILM TITLE" [style]`
+- **Bắt đầu một phim:** `python doc.py new "14. Tên phim (20 Phút) - slug" "FILM TITLE" --script kich_ban.md --style style.json` (không `--style` = mặc định `netflix-cold`; file style tự điền từ [styles/_template.json](styles/_template.json))
 - **Phong cách edit (style):** `python doc.py styles` liệt kê các preset (`netflix-cold`, `warm-vintage`, `clean-explainer`, `noir-crime`), `python doc.py <prj> style set <tên>` đổi phong cách. Chi tiết và cách tạo style mới: [docs/STYLES.md](docs/STYLES.md)
 - **Hướng dẫn từng bước:** [docs/QUY_TRINH.md](docs/QUY_TRINH.md)
 - **Chọn b-roll và ảnh bằng agent Sonnet:** [docs/PICKER_SONNET.md](docs/PICKER_SONNET.md)

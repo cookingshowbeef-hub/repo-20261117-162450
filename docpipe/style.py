@@ -5,6 +5,10 @@ So a style sets the film-wide look (grade, letterbox, cut length, card timing, d
 house rules such as graphics per minute and music coverage), and film.json can still override any single key.
 A film.json without "style" gets ctx.DEFAULTS alone (films made before styles existed are unchanged).
 
+"style" is either a preset name in styles/ ("warm-vintage") or the film's own style file: a path ending in .json, relative
+to 04_Scripts_Code ("style.json", what `doc.py new ... --style <file>` and `style set <file>` write) or absolute. A file's
+"extends" may name a preset or another .json next to it. styles/_template.json is the fill-in example for users.
+
 Preset keys (all optional; see docs/STYLES.md):
   name, label, description, extends   meta ("extends": another preset to start from)
   timing / edit / overlay / render / audio   same keys as film.json (merged into the film's settings)
@@ -28,28 +32,90 @@ def _merge(a, b):
     return out
 
 
-def path(name):
+is_file = lambda name: str(name).lower().endswith(".json") or os.sep in str(name) or "/" in str(name)
+KNOWN = set(META) | {"timing", "edit", "overlay", "render", "audio", "gfx", "rules", "notes", "voice"}
+GRADE = {"contrast", "lift", "cool", "warm", "saturation", "vignette", "letterbox"}
+
+
+def path(name, base=None):
+    """preset name -> styles/<name>.json; a .json path -> itself (relative to base, the film's 04_Scripts_Code)."""
+    if is_file(name):
+        return os.path.normpath(name if os.path.isabs(name) else os.path.join(base or os.getcwd(), name))
     return os.path.join(STYLES_DIR, f"{name}.json")
 
 
-def load(name, _seen=()):
-    """the preset with its "extends" chain resolved (meta keys kept from the preset itself)."""
-    p = path(name)
+def _read(p, name):
+    try:
+        return json.load(open(p, encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        sys.exit(f"style {name!r}: not valid JSON ({p}: line {e.lineno}, col {e.colno}: {e.msg})")
+
+
+def problems(s):
+    """unknown keys and bad values in a style file: a typo would otherwise be ignored without a word."""
+    out = [f"unknown key {k!r}" for k in s if k not in KNOWN and not k.startswith("_")]
+    g = s.get("render", {}).get("grade", {})
+    out += [f"render.grade: unknown key {k!r} (have {', '.join(sorted(GRADE))})" for k in g if k not in GRADE]
+    for k, v in (s.get("gfx", {}).get("palette") or {}).items():
+        if not (isinstance(v, str) and v.startswith("#") and len(v) in (4, 7)):
+            out.append(f"gfx.palette.{k}: {v!r} is not a #RRGGBB colour")
+    return out
+
+
+_WARNED = set()
+
+
+def load(name, base=None, _seen=()):
+    """the preset or style file with its "extends" chain resolved (meta keys kept from the file itself)."""
+    p = path(name, base)
     if not os.path.exists(p):
-        sys.exit(f"style {name!r} not found in {STYLES_DIR} (have: {', '.join(n for n, *_ in available()) or 'none'})")
-    if name in _seen:
-        sys.exit(f"style {name!r}: extends loop ({' -> '.join(_seen + (name,))})")
-    s = json.load(open(p, encoding="utf-8"))
+        where = p if is_file(name) else STYLES_DIR
+        sys.exit(f"style {name!r} not found ({where}); presets: {', '.join(n for n, *_ in available()) or 'none'}")
+    if p in _seen:
+        sys.exit(f"style {name!r}: extends loop")
+    s = _read(p, name)
+    bad = problems(s)
+    if bad and p not in _WARNED:                     # once per file per run
+        _WARNED.add(p)
+        print(f"  ! style {name}: " + "; ".join(bad))
     if s.get("extends"):
-        base = {k: v for k, v in load(s["extends"], _seen + (name,)).items() if k not in META}
-        s = _merge(base, s)
+        base_s = {k: v for k, v in load(s["extends"], os.path.dirname(p), _seen + (p,)).items() if k not in META}
+        s = _merge(base_s, s)
     s["name"] = name
     return s
 
 
-def layer(name):
-    """the part of a preset that merges into the film's settings."""
-    return {k: v for k, v in load(name).items() if k not in META} if name else {}
+def layer(name, base=None):
+    """the part of a preset or style file that merges into the film's settings."""
+    return {k: v for k, v in load(name, base).items() if k not in META} if name else {}
+
+
+BRIEF_EXT = (".md", ".txt", ".docx", ".pdf", ".png", ".jpg", ".jpeg", ".webp")
+
+
+def adopt(src, code):
+    """a style the user brought for this film -> (value for film.json "style", note).
+    .json: checked, copied to 04_Scripts_Code/style.json. A brief (.md/.txt/.docx/.pdf/image): copied as STYLE_BRIEF.<ext>
+    for Claude to turn into style.json; the film keeps the default style until then. Anything else: a preset name."""
+    if not os.path.isfile(src):
+        load(src)                                       # preset name (fails with the list of presets)
+        return src, f"preset {src}"
+    ext = os.path.splitext(src)[1].lower()
+    if ext == ".json":
+        s = _read(src, src)
+        bad = problems(s)
+        if s.get("extends") and is_file(s["extends"]) and not os.path.isabs(s["extends"]):
+            s["extends"] = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(src)), s["extends"]))
+        json.dump(s, open(os.path.join(code, "style.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+        load("style.json", code)                        # its extends chain must resolve
+        return "style.json", (f"style file {os.path.basename(src)} -> 04_Scripts_Code/style.json"
+                              + (f" (check: {'; '.join(bad)})" if bad else ""))
+    if ext in BRIEF_EXT:
+        import shutil
+        shutil.copy2(src, os.path.join(code, "STYLE_BRIEF" + ext))
+        return None, (f"style brief -> 04_Scripts_Code/STYLE_BRIEF{ext}: Claude turns it into 04_Scripts_Code/style.json"
+                      f" (extends the nearest preset), then  doc.py <prj> style set style.json")
+    sys.exit(f"style {src!r}: give a preset name, a .json style file, or a brief ({', '.join(BRIEF_EXT)})")
 
 
 def available():
@@ -148,7 +214,7 @@ def show(P):
     name = P.cfg.get("style")
     print(f"style: {name or '(none: engine defaults)'}")
     if name:
-        s = load(name)
+        s = load(name, P.code)
         print(f"  {s.get('label', '')} - {s.get('description', '')}")
         if s.get("extends"):
             print(f"  extends {s['extends']}")
@@ -171,8 +237,17 @@ def show(P):
 
 def run(P, args):
     sys.stdout.reconfigure(encoding="utf-8")
-    if args[:1] == ["set"] and len(args) > 1:            # doc.py <prj> style set <name>: write it into film.json
-        load(args[1])
+    if args[:1] == ["set"] and len(args) > 1:            # doc.py <prj> style set <preset | file.json | brief>
+        src = args[1]
+        if not os.path.isfile(src) and is_file(src):    # a file already in 04_Scripts_Code, e.g. style.json
+            load(src, P.code)
+            value, note = src, f"style file 04_Scripts_Code/{src}"
+        else:
+            value, note = adopt(src, P.code)
+        print(note)
+        if value is None:
+            return
+        args = ["set", value]
         cfg_p = os.path.join(P.code, "film.json")
         raw = json.load(open(cfg_p, encoding="utf-8"))
         raw["style"] = args[1]

@@ -8,13 +8,31 @@ Mỗi phong cách là một file `styles/<tên>.json`. Phim chọn phong cách b
 
 Thứ tự áp dụng: **mặc định của engine ← style ← `film.json`**. Style quyết định "chất" của cả phim. Muốn chỉnh riêng một phim (ví dụ màu nhấn khác, cắt chậm hơn), ghi đè đúng khóa đó trong `film.json`. Phim không có `"style"` (phim cũ đến phim 17) chạy như trước, không đổi gì.
 
-## Lệnh
+## Người dùng đưa kịch bản kèm file style
 
 ```
-python doc.py styles                         # các style có sẵn
-python doc.py new "18. Tên (20 Phút) - slug" "TITLE" noir-crime    # phim mới với một style (bỏ trống = netflix-cold)
+python doc.py new "18. Tên (20 Phút) - slug" "TITLE" --script kich_ban.md --style style_cua_toi.json
+```
+
+| `--style` là | Engine làm gì |
+|---|---|
+| bỏ trống | Dùng mặc định `netflix-cold` (template mẫu) |
+| tên preset (`noir-crime`) | Dùng preset trong `styles/` |
+| file `.json` | Kiểm tra (JSON hợp lệ, khóa gõ sai, mã màu), chép thành `04_Scripts_Code/style.json`; `film.json` ghi `"style": "style.json"` |
+| file mô tả `.md/.txt/.docx/.pdf` hoặc ảnh | Chép thành `04_Scripts_Code/STYLE_BRIEF.<ext>`; phim tạm dùng `netflix-cold` đến khi Claude viết `style.json` từ brief |
+
+`--script`: file `.md/.txt` vào thẳng `Narration.md`; file khác (`.docx`, `.pdf`) giữ là `SCRIPT_SOURCE.<ext>` để Claude chuyển.
+
+**Tự viết file style:** chép [`styles/_template.json`](../styles/_template.json), sửa giá trị, xóa dòng không cần (dòng bị xóa lấy từ style trong `"extends"`). Các khóa bắt đầu bằng `_` chỉ là ghi chú.
+
+## Lệnh khác
+
+```
+python doc.py styles                         # các preset có sẵn
 python doc.py <prj> style                    # style của phim và mọi thông số nó cho ra
-python doc.py <prj> style set warm-vintage   # đổi style (ghi vào film.json)
+python doc.py <prj> style set warm-vintage   # đổi sang preset
+python doc.py <prj> style set D:\style.json  # đổi sang file của người dùng (chép vào 04_Scripts_Code/style.json)
+python doc.py <prj> style set style.json     # dùng style.json đã có trong 04_Scripts_Code (sau khi Claude viết từ brief)
 ```
 
 Đổi style giữa chừng thì chạy lại theo thứ tự `lint` → `build` → `gfx stills --all` (duyệt) → `gfx` → `audio final` → `premiere`. Style mới có thể đổi nhịp nghỉ (`timing`), nên `lint` có thể báo đồ họa chồng nhau; dời mốc trong `overlay_spec.py` cho hết lỗi.
@@ -81,8 +99,8 @@ Font phải có trong `templates/remotion/public/fonts` (file `.ttf`/`.woff2`) h
 ## Tạo style mới
 
 Người dùng có thể nói:
-- "phim này dùng style X", hoặc "chỉnh style cho ấm hơn hoặc cắt nhanh hơn" → Claude sửa `film.json` (một phim) hoặc file style (mọi phim dùng nó);
-- "tạo style mới giống video Y" (gửi link, ảnh chụp hoặc mô tả) → Claude tạo `styles/<tên>.json` với `"extends"` từ style gần nhất, chỉ ghi phần khác.
+- "phim này dùng style X", hoặc "chỉnh style cho ấm hơn hoặc cắt nhanh hơn" → Claude sửa `film.json` hoặc `04_Scripts_Code/style.json` (một phim), hoặc preset trong `styles/` (mọi phim dùng nó);
+- "tạo style mới giống video Y" (gửi link, ảnh chụp hoặc brief) → Claude viết `04_Scripts_Code/style.json` cho phim đó, với `"extends"` từ style gần nhất, chỉ ghi phần khác. Muốn dùng lại cho phim sau thì chép vào `styles/<tên>.json` thành preset.
 
 Cách làm:
 1. Chọn style nền gần nhất, ghi `grade`, `palette`, `fonts`, `motion`, nhịp cắt, `rules` và `notes`.

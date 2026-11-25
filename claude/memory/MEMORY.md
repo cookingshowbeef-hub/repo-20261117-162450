@@ -10,4 +10,4 @@
 - [Engine GitHub repo](engine-github-repo.md) — public repo of the engine (no secrets in it); new machines set up from its link; keys/settings in ~/.docpipe
 - [Premiere for new films](premiere-for-new-films.md) — new films go to Premiere via FCP7 XML; old Resolve films untouched
 - [Premiere editable text](premiere-editable-text.md) — XML Text generators editable, keyframes ignored; text_spec.py → V6+ text (film 17, no-Remotion films)
-- [Edit style presets](edit-style-presets.md) — films pick styles/<name>.json via film.json "style"; ask the style in stage 1, follow its rules/notes
+- [Edit style presets](edit-style-presets.md) — films pick styles/<name>.json via film.json "style"; user gives script + optional style file (default netflix-cold); follow its rules/notes

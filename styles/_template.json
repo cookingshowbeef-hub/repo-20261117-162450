@@ -1,0 +1,40 @@
+{
+ "_huong_dan": "File style mẫu để tự điền. Chép file này, sửa giá trị, xóa những dòng không cần (dòng nào bỏ đi sẽ lấy từ style 'extends'). Dùng: python doc.py new \"<thư mục>\" \"TITLE\" --script kich_ban.md --style style_cua_toi.json. Giải thích từng khóa: docs/STYLES.md. Các khóa bắt đầu bằng _ chỉ là ghi chú.",
+
+ "extends": "netflix-cold",
+ "label": "Tên phong cách của tôi",
+ "description": "Một câu tả chất của phong cách",
+
+ "_timing": "Nhịp nghỉ (giây): giữa hai câu, giữa hai ý, thẻ tên phần, chữ cuối phim",
+ "timing": {"gap_line": 0.75, "gap_block": 1.8, "act_card": 5.5, "end_text": 20.0},
+
+ "_edit": "Độ dài mỗi cảnh (giây): mục tiêu, ngắn nhất, dài nhất; fade = mờ ở thẻ tựa/thẻ phần",
+ "edit": {"target": 3.6, "min": 2.5, "max": 5.0, "fade": 0.45},
+
+ "_grade": "contrast 0-0.35 | lift 0-12 (nâng đen) | cool/warm 0-0.06 (ngả xanh/cam) | saturation 0.4-1.1 | vignette 0-0.4 | letterbox 0 = tắt, 2.39 hoặc 2.0",
+ "render": {"grade": {"contrast": 0.2, "lift": 3, "cool": 0.03, "warm": 0.0, "saturation": 0.9, "vignette": 0.22, "letterbox": 0}},
+
+ "_audio": "Độ to bản cuối (LUFS) và mức nhạc hạ khi có giọng (dB)",
+ "audio": {"lufs": -14, "duck_db": 6},
+
+ "_gfx": "Đồ họa: mã màu #RRGGBB; font phải có trong templates/remotion/public/fonts hoặc là font Windows",
+ "gfx": {
+  "palette": {"text": "#EEF1F4", "dim": "#AEB8C2", "accent": "#6FAEDB", "accent_text": "#A9D6F5",
+              "danger": "#E0563F", "danger_text": "#EE6A50", "warm": "#E8A15A", "bg": "#0B0E12", "land": "#1E252D", "sea": "#0B0E12"},
+  "motion": {"rise": {"dy": 22, "blur": 7, "len": 0.9}, "tracking": 1.0},
+  "grain": 0.06,
+  "scrim": 1.0
+ },
+
+ "_rules": "Luật kiểm tra: số đồ họa mỗi phút [thấp, cao], tỉ lệ thời lượng lời dẫn có nhạc, nhạc thấp hơn giọng bao nhiêu dB, số cue nhạc Suno",
+ "rules": {"gfx_per_min": [2.5, 3.0], "music_coverage": 0.85, "music_under_voice_db": 15, "suno_cues": [4, 6]},
+
+ "_notes": "Hướng dẫn bằng lời cho Claude ở từng chặng",
+ "notes": {
+  "narration": "Giọng đọc, tốc độ, cách mở phim",
+  "broll": "Loại cảnh nên tìm, nên tránh",
+  "graphics": "Loại đồ họa ưu tiên, độ dày",
+  "music": "Thể loại, nhạc cụ, bpm, cảm xúc (dùng cho prompt Suno)",
+  "sound": "Tiếng nền, hiệu ứng"
+ }
+}

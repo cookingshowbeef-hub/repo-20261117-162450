@@ -1,11 +1,12 @@
 """Documentary pipeline: one command per step, run on a project folder.
 
-  python doc.py new "<folder name>" "<FILM TITLE>" [style]   new project in 04. Dự án đang Edit (from templates/), style default netflix-cold
+  python doc.py new "<folder name>" "<FILM TITLE>" [--script <file>] [--style <preset | style.json | brief>]
+                                                       new project (from templates/); no --style = netflix-cold
   python doc.py styles                                 the edit styles in styles/ (docs/STYLES.md)
   python doc.py <project> <step> [args]
 
 Steps, in order (see docs/QUY_TRINH.md):
-  style [set <name>] the film's style and the settings it gives; set = write film.json "style"
+  style [set <preset | file.json | brief>]  the film's style and the settings it gives; set = use it (a .json is copied to 04_Scripts_Code/style.json)
   voice [ids]        narration markdown -> voice lines + word timings           (01_Voice)
   timeline           lines on the film clock                                     (05_Renders/timeline.json)
   script             readable script with V.O. text and numbered GFX             (04_Scripts_Code/<title>_Script.md)

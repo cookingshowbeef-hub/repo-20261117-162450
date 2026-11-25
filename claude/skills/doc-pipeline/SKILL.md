@@ -31,8 +31,9 @@ Lệnh chạy từ ENGINE; `<prj>` là số thư mục dự án, ví dụ `12`.
 
 ```
 python doc.py styles                                   # các phong cách có sẵn (styles/*.json)
-python doc.py new "12. Tên phim (20 Phút) - slug" "FILM TITLE" [style]   # style mặc định netflix-cold
-python doc.py <prj> style [set <tên>]                  # xem / đổi phong cách của phim
+python doc.py new "12. Tên phim (20 Phút) - slug" "FILM TITLE" --script <file> --style <preset | style.json | brief>
+                                                       # không --style = netflix-cold (template mẫu)
+python doc.py <prj> style [set <preset | file.json | brief>]   # xem / đổi phong cách của phim
 python doc.py <prj> voice | timeline | script
 python doc.py <prj> search <set> | pick px:ID="mô tả" ... | fetch | commons | freesound ...
 python doc.py <prj> overlays | gfx stills | gfx
@@ -73,7 +74,13 @@ Phim cũ (đến phim 15) vẫn ở Resolve và không xuất lại. Vòng góp 
 
 **Phong cách (style): mỗi phim chọn một, không cố định**
 - Phong cách là file `ENGINE/styles/<tên>.json`; `film.json` ghi `"style": "<tên>"`. Thứ tự: mặc định engine ← style ← `film.json` (khóa trong `film.json` đè lên style). Có sẵn: `netflix-cold` (mặc định), `warm-vintage`, `clean-explainer`, `noir-crime`. Chi tiết: `docs/STYLES.md`.
-- **Hỏi phong cách ở câu hỏi đầu tiên của chặng 1**, cùng lúc với ngôn ngữ phim (liệt kê bằng `doc.py styles`). Người dùng không nói thì dùng `netflix-cold`.
+- **Đầu vào của người dùng: kịch bản, kèm (tùy chọn) file style.** Tạo phim bằng `new ... --script <kịch bản> --style <file>`:
+  - **File `.json`** (người dùng tự điền từ `styles/_template.json`, hoặc chép từ phim khác) → engine kiểm tra rồi chép thành `04_Scripts_Code/style.json`, `film.json` ghi `"style": "style.json"`. Engine báo khóa gõ sai hoặc mã màu sai; sửa cùng người dùng.
+  - **File mô tả** (`.md/.txt/.docx/.pdf`, hoặc ảnh tham khảo) → engine chép thành `STYLE_BRIEF.<ext>`, phim tạm dùng `netflix-cold`. Claude đọc brief, viết `04_Scripts_Code/style.json` (`"extends"` từ preset gần nhất, chỉ ghi phần khác, `notes` theo đúng lời brief), render thử vài still cho người dùng duyệt, rồi `doc.py <prj> style set style.json`.
+  - **Tên preset** (`warm-vintage`...) → dùng luôn.
+  - **Không có file style** → mặc định `netflix-cold` (template mẫu). Không cần hỏi lại; chỉ nhắc một dòng rằng có thể gửi file style.
+- Kịch bản `.md/.txt` vào thẳng `Narration.md` (vẫn kiểm tra định dạng engine); file khác (`.docx`, `.pdf`) được giữ là `SCRIPT_SOURCE.<ext>` để Claude chuyển thành `Narration.md`.
+- Style dùng cho nhiều phim thì đề nghị người dùng chép vào `ENGINE/styles/<tên>.json` để thành preset (commit khi người dùng đồng ý).
 - Style quyết định: grade (contrast, lift, cool/warm, saturation, vignette, letterbox), độ dài cảnh, nhịp nghỉ, ducking; màu, font, chuyển động chữ, hạt phim của đồ họa Remotion; `rules` (đồ họa mỗi phút, độ phủ nhạc, số dB dưới giọng, số cue Suno); `notes` cho từng chặng (giọng, b-roll, đồ họa, prompt nhạc, tiếng động). **Ở mỗi chặng đọc `doc.py <prj> style` và làm theo `rules` + `notes` của style đó**, không áp con số của `netflix-cold` cho phim style khác.
 - Người dùng muốn chỉnh chất một phim → ghi đè trong `film.json` (`render.grade`, `edit`, `gfx.palette`...). Muốn một phong cách mới ("giống video Y", "ấm hơn, cắt nhanh hơn") → tạo `styles/<tên>.json` với `"extends"` từ style gần nhất, render thử vài still để người dùng duyệt (cách làm trong `STYLES.md`), rồi mới áp vào phim.
 - Không sửa hằng số màu/font trong `Film.jsx`/`Overlays.jsx` của phim mới: chúng đọc `src/style.json` do `gfx` ghi từ style. Phim cũ (không có `src/style.js`) giữ nguyên.
@@ -96,7 +103,7 @@ Phim 12 tốn ~44% hạn mức 5 giờ của gói Pro. Phim 13 làm trọn trong
 
 | Chặng | Đọc | Lệnh | Xong khi có |
 |---|---|---|---|
-| **1. Kịch bản + giọng** | kịch bản của người dùng, `QUY_TRINH.md` mục 0–2, `film.json` của phim mẫu, `doc.py styles` | `new ... <style>`, viết `Narration.md`, `film.json` (sections, `hold_after` theo chỗ nghỉ), `FACT_CHECK.md`, `voice`, `timeline` | `01_Voice/narration.json`, `05_Renders/timeline.json` |
+| **1. Kịch bản + giọng** | kịch bản và file style (nếu có) của người dùng, `QUY_TRINH.md` mục 0–2, `film.json` của phim mẫu | `new ... --script --style`, (brief → `style.json`), viết `Narration.md`, `film.json` (sections, `hold_after` theo chỗ nghỉ), `FACT_CHECK.md`, `voice`, `timeline` | `01_Voice/narration.json`, `05_Renders/timeline.json` |
 | **2. Hình** | `media_spec.py`, `01_Voice/narration.json` (chỉ id + câu) | `search` từng bộ, `mini_sheets.py`, `commons`, rồi **giao agent Sonnet chọn** (`docs/PICKER_SONNET.md`), `fetch` | `02_B-Roll/candidates/picks.json` đủ hình; `03_Images/commons/sheets/usable.md`; tóm tắt của agent ghi vào bàn giao |
 | **3. Dựng** | bàn giao chặng 2, `narration.json`, `picks.json`, `overlay_spec.py`/`audio_spec.py` của phim mẫu | `visuals.py` + `gen_template.py`, `lint` → `build`, `overlays`, `gfx stills` → `gfx`, `music make`/`music lib`, `audio_spec.py`, `audio final`, `premiere` (phim cũ: `review`) | `05_Renders/premiere/timeline.xml` (phim cũ: `review/timeline.fcpxml`) đã parse bằng minidom, không thiếu file |
 | **4. Góp ý** (mỗi vòng một session) | file `.edl`, `REVIEW_NOTES.md` | `notes`, sửa spec, `build`, `review` | `timeline.fcpxml` mới |
@@ -115,7 +122,7 @@ Chặng 3 nặng nhất. Nếu cần, tách tiếp thành **3a** (đồ họa + 
 - Sửa spec bằng Python có `assert` chuỗi gốc, hoặc viết lại cả khối. Phim 13: một regex sửa gain trong `audio_spec.py` đã thay nhầm mốc thời gian.
 
 **Tiết kiệm token**
-- **Kịch bản người dùng đưa nên đúng định dạng engine** (ngôn ngữ đích, mỗi dòng 1 câu thoại, `## ` mỗi phần). Hỏi ngôn ngữ phim và phong cách ngay câu hỏi đầu tiên, cùng lúc xác nhận file kịch bản.
+- **Kịch bản người dùng đưa nên đúng định dạng engine** (ngôn ngữ đích, mỗi dòng 1 câu thoại, `## ` mỗi phần). Hỏi ngôn ngữ phim ngay câu hỏi đầu tiên, cùng lúc xác nhận file kịch bản và file style (không có thì dùng mặc định).
 - **Duyệt hình bằng bảng ảnh nhỏ**: tối đa 4 ứng viên mỗi từ khóa, ô 240×135, 48 ô mỗi bảng: `python ENGINE/tools/mini_sheets.py "<thư mục dự án>" intro,birth 4` → `02_B-Roll/candidates/<set>/mini_N.jpg`. Không mở bảng `sheet_N.jpg` cỡ lớn của engine.
 - **Phiên chính không tự xem bảng ảnh** (b-roll lẫn Commons): mỗi agent `model: "sonnet"` nhận 2–3 bộ theo mẫu trong `docs/PICKER_SONNET.md`. Agent xem ảnh, chạy `pick`, ghi `picker_notes.md` / `usable.md`, trả về ≤ 10 dòng. Nghi lựa chọn nào thì hỏi lại agent bằng SendMessage, không mở ảnh ở phiên chính.
 - **Viết file lớn một lần**: tạo `script_template.md` bằng script Python sinh từ một dict `{line_id: "mã hình"}` (mẫu: `ENGINE/tools/per_line_template_film12.py`, sửa dict V, JOIN, ACTS cho phim mới), không viết tay rồi sửa nhiều lần. Không dán lại toàn văn lời dẫn vào hội thoại.

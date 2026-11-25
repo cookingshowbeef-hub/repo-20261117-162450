@@ -77,7 +77,7 @@ class Project:
             sys.exit(f"no film.json in {self.code}")
         raw = json.load(open(cfg, encoding="utf-8"))
         from . import style                        # DEFAULTS <- styles/<film.json "style">.json <- film.json
-        self.cfg = _merge(_merge(DEFAULTS, style.layer(raw.get("style"))), raw)
+        self.cfg = _merge(_merge(DEFAULTS, style.layer(raw.get("style"), self.code)), raw)
         self.renders = os.environ.get("DOC_OUT") or os.path.join(self.root, "05_Renders")
         os.makedirs(self.renders, exist_ok=True)
         if self.code not in sys.path:

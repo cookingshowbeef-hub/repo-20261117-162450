@@ -16,11 +16,11 @@ python doc.py <dự án> <bước> [tham số]
 ## 0. Tạo dự án
 
 ```
-python doc.py new "12. Tên phim (20 Phút) - slug" "FILM TITLE" [style]
+python doc.py new "12. Tên phim (20 Phút) - slug" "FILM TITLE" --script kich_ban.md --style <preset | style.json | brief>
 python doc.py styles                       # các phong cách có sẵn
 ```
 
-**Chọn phong cách trước tiên** (hỏi người dùng cùng lúc với ngôn ngữ phim). Phong cách là một file `styles/<tên>.json`, quyết định grade, letterbox, nhịp cắt, nhịp nghỉ, màu, font và chuyển động đồ họa, mật độ đồ họa, độ phủ nhạc, cùng ghi chú cho từng chặng (`notes`: b-roll, đồ họa, prompt nhạc). Mặc định là `netflix-cold`. Đổi sau: `doc.py <prj> style set <tên>`; xem thông số: `doc.py <prj> style`. Chi tiết và cách tạo phong cách mới: `docs/STYLES.md`. **Mọi con số "mục tiêu" bên dưới là của `netflix-cold`; phim dùng style khác thì theo `rules` và `notes` của style đó.**
+**Người dùng đưa kịch bản kèm file style (tùy chọn); không có file style thì dùng mặc định `netflix-cold`.** File style là `.json` tự điền từ `styles/_template.json`, tên một preset, hoặc một bản mô tả (`.md/.txt/.docx/.pdf`, ảnh) để Claude chuyển thành `04_Scripts_Code/style.json`. Phong cách là một file `styles/<tên>.json`, quyết định grade, letterbox, nhịp cắt, nhịp nghỉ, màu, font và chuyển động đồ họa, mật độ đồ họa, độ phủ nhạc, cùng ghi chú cho từng chặng (`notes`: b-roll, đồ họa, prompt nhạc). Mặc định là `netflix-cold`. Đổi sau: `doc.py <prj> style set <tên>`; xem thông số: `doc.py <prj> style`. Chi tiết và cách tạo phong cách mới: `docs/STYLES.md`. **Mọi con số "mục tiêu" bên dưới là của `netflix-cold`; phim dùng style khác thì theo `rules` và `notes` của style đó.**
 
 Lệnh này tạo các thư mục `01_Voice … 07_Audio` và chép file mẫu vào `04_Scripts_Code`. Nó cũng tạo `06_Graphics/remotion`, có thư viện đồ họa và `node_modules` dùng chung qua junction.
 
