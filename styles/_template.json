@@ -17,7 +17,7 @@
  "_audio": "Độ to bản cuối (LUFS) và mức nhạc hạ khi có giọng (dB)",
  "audio": {"lufs": -14, "duck_db": 6},
 
- "_gfx": "Đồ họa: mã màu #RRGGBB; font phải có trong templates/remotion/public/fonts hoặc là font Windows",
+ "_gfx": "Đồ họa: mã màu #RRGGBB; font: file .ttf để cạnh file style này (\"file\": \"fonts/Ten.ttf\"), trong templates/remotion/public/fonts, hoặc files [] = font đã cài trong Windows",
  "gfx": {
   "palette": {"text": "#EEF1F4", "dim": "#AEB8C2", "accent": "#6FAEDB", "accent_text": "#A9D6F5",
               "danger": "#E0563F", "danger_text": "#EE6A50", "warm": "#E8A15A", "bg": "#0B0E12", "land": "#1E252D", "sea": "#0B0E12"},

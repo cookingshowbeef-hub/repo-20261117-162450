@@ -66,7 +66,7 @@ def run(P, args):
             t1 = t0 + float(end[1:]) if end.startswith("+") else beat(end) - (0.1 if ":" in end else 0)
         except KeyError as e:
             bad.append(f"GFX{gfx} {kind}: {e}"); continue
-        if kind in full:
+        if kind in full and kind != "end_text":     # end_text keeps its own length (capping it hid the closing lines)
             t1 = min(t1, ts[-1] + hold)
         p = dict(p)
         if kind == "map" and "cam" in p:

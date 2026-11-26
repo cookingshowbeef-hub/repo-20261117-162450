@@ -78,11 +78,35 @@ def load(name, base=None, _seen=()):
     if bad and p not in _WARNED:                     # once per file per run
         _WARNED.add(p)
         print(f"  ! style {name}: " + "; ".join(bad))
+    for f in font_files(s.get("gfx", {})):           # a font file next to the style file: remember where it is
+        if not os.path.isabs(f["file"]) and os.path.isfile(os.path.join(os.path.dirname(p), f["file"])):
+            f["src"] = os.path.join(os.path.dirname(p), f["file"])
     if s.get("extends"):
         base_s = {k: v for k, v in load(s["extends"], os.path.dirname(p), _seen + (p,)).items() if k not in META}
+        if "gfx" in base_s:
+            base_s["gfx"] = drop_vi(base_s["gfx"], s.get("gfx", {}))
         s = _merge(base_s, s)
     s["name"] = name
     return s
+
+
+def font_files(g):
+    """every {"file": ...} entry under gfx.fonts and gfx.fonts_vi (the dicts themselves, so they can be annotated)."""
+    return [x for blk in ("fonts", "fonts_vi") for f in (g.get(blk) or {}).values() if isinstance(f, dict)
+            for x in (f.get("files") or []) if isinstance(x, dict) and x.get("file")]
+
+
+def drop_vi(base, top):
+    """base gfx without the Vietnamese substitutes of the font slots that `top` replaces with another family and gives
+    no Vietnamese version of: a fonts_vi entry belongs to the font it was made for (otherwise every style's own font,
+    e.g. noir's Courier New, turned back into Lora/Be Vietnam Pro in a Vietnamese film)."""
+    fv = dict(base.get("fonts_vi") or {})
+    tv = top.get("fonts_vi") or {}
+    for k, f in (top.get("fonts") or {}).items():
+        old = (base.get("fonts") or {}).get(k) or {}
+        if k in fv and k not in tv and isinstance(f, dict) and f.get("family") != old.get("family"):
+            fv.pop(k)
+    return dict(base, fonts_vi=fv) if "fonts_vi" in base else base
 
 
 def layer(name, base=None):
@@ -102,13 +126,27 @@ def adopt(src, code):
         return src, f"preset {src}"
     ext = os.path.splitext(src)[1].lower()
     if ext == ".json":
+        import shutil
         s = _read(src, src)
         bad = problems(s)
+        here = os.path.dirname(os.path.abspath(src))
         if s.get("extends") and is_file(s["extends"]) and not os.path.isabs(s["extends"]):
-            s["extends"] = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(src)), s["extends"]))
+            s["extends"] = os.path.normpath(os.path.join(here, s["extends"]))
+        copied = []
+        for f in font_files(s.get("gfx", {})):          # font files the user put next to the style (or gave by full path)
+            p = f["file"] if os.path.isabs(f["file"]) else os.path.join(here, f["file"])
+            if os.path.isfile(p):                       # -> 04_Scripts_Code/fonts/, so the film keeps them with its style.json
+                os.makedirs(os.path.join(code, "fonts"), exist_ok=True)
+                if os.path.normcase(os.path.abspath(p)) != os.path.normcase(os.path.join(code, "fonts", os.path.basename(p))):
+                    shutil.copy2(p, os.path.join(code, "fonts", os.path.basename(p)))
+                f["file"] = "fonts/" + os.path.basename(p)
+                copied.append(os.path.basename(p))
+            elif os.path.isabs(f["file"]) or not any(os.path.isfile(os.path.join(d, f["file"])) for d in PUBLIC_DIRS()):
+                bad.append(f"font file {f['file']!r} not found (next to the style file or in templates/remotion/public)")
         json.dump(s, open(os.path.join(code, "style.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
         load("style.json", code)                        # its extends chain must resolve
         return "style.json", (f"style file {os.path.basename(src)} -> 04_Scripts_Code/style.json"
+                              + (f", fonts -> 04_Scripts_Code/fonts: {', '.join(copied)}" if copied else "")
                               + (f" (check: {'; '.join(bad)})" if bad else ""))
     if ext in BRIEF_EXT:
         import shutil
@@ -131,23 +169,98 @@ def available():
 def gfx(P):
     """the graphics block for Remotion: the film's gfx (style + film.json), on top of the base style's; Vietnamese
     narration (voice.language "vi") swaps in gfx.fonts_vi so diacritics render."""
+    import copy
     base = load(BASE).get("gfx", {}) if os.path.exists(path(BASE)) else {}
-    g = _merge(base, P.cfg.get("gfx", {}))
-    if str(P.cfg.get("voice", {}).get("language", "")).lower().startswith("vi") and g.get("fonts_vi"):
+    top = copy.deepcopy(P.cfg.get("gfx", {}))
+    g = _merge(drop_vi(base, top), top)
+    vi = str(P.cfg.get("voice", {}).get("language", "")).lower().startswith("vi")
+    if vi and g.get("fonts_vi"):
         g["fonts"] = _merge(g.get("fonts", {}), g["fonts_vi"])
     g.pop("fonts_vi", None)
     g["style"] = P.cfg.get("style") or "(none)"
     return g
 
 
+ENGINE_PUBLIC = os.path.join(os.path.dirname(STYLES_DIR), "templates", "remotion", "public")
+PUBLIC_DIRS = lambda: [ENGINE_PUBLIC]
+
+
+def system_fonts():
+    """family names of the fonts installed in Windows (machine + this user), lower case; empty off Windows."""
+    if not hasattr(system_fonts, "cache"):
+        names = set()
+        try:
+            import winreg
+            for hive in (winreg.HKEY_LOCAL_MACHINE, winreg.HKEY_CURRENT_USER):
+                try:
+                    k = winreg.OpenKey(hive, r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts")
+                except OSError:
+                    continue
+                for i in range(winreg.QueryInfoKey(k)[1]):
+                    n = winreg.EnumValue(k, i)[0].split(" (")[0]            # "Georgia Bold Italic (TrueType)"
+                    for part in n.split(" & "):                             # "Cambria & Cambria Math (TrueType)"
+                        names.add(part.strip().lower())
+        except ImportError:
+            pass
+        system_fonts.cache = names
+    return system_fonts.cache
+
+
+def installed(family):
+    """True if a Windows font of this family is installed (or the machine is not Windows: cannot tell)."""
+    names = system_fonts()
+    fam = family.lower()
+    return not names or any(n == fam or n.startswith(fam + " ") for n in names)
+
+
+def sync_fonts(P, g):
+    """make every font file the graphics name servable by Remotion (staticFile = the project's public/ folder):
+    a file missing there is copied from the engine's templates/remotion/public, from next to the style file that named
+    it, or from its full path. Returns (g for src/style.json, [warnings]); unfound files are left out (the family then
+    falls back to an installed font of that name, else the fallback) and named in the warnings."""
+    import copy, shutil
+    pub = P.p("06_Graphics", "remotion", "public")
+    g, warn = copy.deepcopy(g), []
+    for name, f in (g.get("fonts") or {}).items():
+        keep = []
+        for x in f.get("files") or []:
+            rel = x["file"].replace("\\", "/")
+            if os.path.isabs(rel):
+                rel = "fonts/" + os.path.basename(rel)
+            dst = os.path.join(pub, *rel.split("/"))
+            if not os.path.isfile(dst):
+                cand = [x.get("src"), x["file"] if os.path.isabs(x["file"]) else None]
+                cand += [os.path.join(d, *rel.split("/")) for d in PUBLIC_DIRS()] + [os.path.join(P.code, *rel.split("/"))]
+                got = next((c for c in cand if c and os.path.isfile(c)), None)
+                if got:
+                    os.makedirs(os.path.dirname(dst), exist_ok=True)
+                    shutil.copy2(got, dst)
+                    print(f"gfx: font {rel} -> 06_Graphics/remotion/public/{rel}")
+            x.pop("src", None)
+            if os.path.isfile(dst):
+                keep.append(dict(x, file=rel))
+            else:
+                warn.append(f"font file {x['file']} ({name}: {f.get('family')}) not found: put it in templates/remotion/public/fonts"
+                            f" or next to the style file; until then the graphics use "
+                            + (f"the installed {f.get('family')}" if installed(f.get("family", "")) else f"the fallback ({f.get('fallback')})"))
+        f["files"] = keep
+        if not keep and f.get("family") and not installed(f["family"]):
+            warn.append(f"font {f['family']} ({name}) has no file and is not installed in Windows: the graphics fall back to {f.get('fallback')}")
+    return g, warn
+
+
 def write_gfx(P):
     """06_Graphics/remotion/src/style.json from the film's style; only for Remotion copies that read it (src/style.js).
-    Rewritten only when it changed, so the stills hash does not move for nothing. Returns True when written."""
+    Copies the style's font files into the project's public/ first (sync_fonts). Rewritten only when it changed, so the
+    stills hash does not move for nothing. Returns True when written."""
     src = P.p("06_Graphics", "remotion", "src")
     if not os.path.exists(os.path.join(src, "style.js")):
         return False                          # films made before styles: their JSX keeps its own constants
+    g, warn = sync_fonts(P, gfx(P))
+    for w in dict.fromkeys(warn):
+        print(f"  ! gfx: {w}")
     dst = os.path.join(src, "style.json")
-    new = json.dumps(gfx(P), ensure_ascii=False, indent=1)
+    new = json.dumps(g, ensure_ascii=False, indent=1)
     if os.path.exists(dst) and open(dst, encoding="utf-8").read() == new:
         return False
     open(dst, "w", encoding="utf-8").write(new)

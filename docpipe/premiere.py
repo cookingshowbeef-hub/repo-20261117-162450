@@ -241,13 +241,29 @@ def premiere(P, args):
     print(f"   Premiere: File > Import > timeline.xml. Grade: Adjustment Layer on V2 over the film, Lumetri > Creative > Look: {lname}")
 
 
-TEXT_STYLES = {   # Premiere "Text" generator: size in px, origin (x, y) as a share of the frame from the centre, y down
-    "title":    dict(size=110, origin=(0, -0.04), font="Georgia"),
-    "subtitle": dict(size=44, origin=(0, 0.08), font="Georgia"),
-    "chapter":  dict(size=84, origin=(0, -0.03), font="Georgia"),
-    "chapter_sub": dict(size=38, origin=(0, 0.07), font="Georgia"),
-    "fact":     dict(size=46, origin=(0, 0.36), font="Georgia"),
+TEXT_STYLES = {   # Premiere "Text" generator: size in px, origin (x, y) as a share of the frame from the centre, y down; font: text_font()
+    "title":    dict(size=110, origin=(0, -0.04)),
+    "subtitle": dict(size=44, origin=(0, 0.08)),
+    "chapter":  dict(size=84, origin=(0, -0.03)),
+    "chapter_sub": dict(size=38, origin=(0, 0.07)),
+    "fact":     dict(size=46, origin=(0, 0.36)),
 }
+
+
+def text_font(P):
+    """the font of the Premiere text: gfx.premiere_font, else the style's serif family (as the Remotion graphics use it).
+    Premiere only sees fonts installed in Windows, so a family that is not installed falls back to Georgia, with a note
+    naming the style's font file to install (right-click > Install) if that look is wanted in Premiere."""
+    from .style import gfx, installed
+    g = gfx(P)
+    serif = (g.get("fonts") or {}).get("serif") or {}
+    fam = g.get("premiere_font") or serif.get("family") or "Georgia"
+    if installed(fam):
+        return fam
+    files = [x["file"] for x in serif.get("files") or []] if not g.get("premiere_font") else []
+    print(f"  ! Premiere text: font {fam} (style {P.cfg.get('style') or '-'}) is not installed in Windows, using Georgia"
+          + (f"; to use {fam}, install " + ", ".join(f"06_Graphics/remotion/public/{f}" for f in files) + " and run premiere again" if files else ""))
+    return "Georgia"
 
 
 def text_tracks(P, FPS, end, nid):
@@ -261,8 +277,10 @@ def text_tracks(P, FPS, end, nid):
     spec = P.spec("text_spec")
     SEQ, D = rate(FPS), round(0.5 * FPS)
     lanes, out = [], {}
+    font = text_font(P)
     for t_in, t_out, text, style in sorted(spec.TEXT, key=lambda x: x[0]):
-        st = dict(TEXT_STYLES["fact"], **(TEXT_STYLES[style] if isinstance(style, str) else style))
+        st = dict(TEXT_STYLES["fact"], font=font)
+        st.update(TEXT_STYLES[style] if isinstance(style, str) else style)     # a dict style may name its own "font"
         a, b = max(0, fr(t_in, FPS)), min(end, fr(t_out, FPS))
         if b - a < 2 * D:
             print(f"  ! text too short, skipped: {text!r}"); continue

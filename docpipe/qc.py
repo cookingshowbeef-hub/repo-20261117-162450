@@ -111,8 +111,12 @@ def qc(P, args):
                 sus.append(f"{s['id']} {s['src']} under “{o['p'].get('text', '')}”")
     row(not sus, "Generic clip under a caption", f"{len(sus)} " + "; ".join(sus), "the picture under a lower third must show what it names; never caption stock as a named place")
     # graphics
+    RU, sty = P.cfg.get("rules", {}), P.cfg.get("style") or "house"
     gpm = len(O) / mins
-    row(gpm >= 2.5, "Graphics density", f"{len(O)} graphics, {gpm:.1f}/min", "2.5-3/min (50-60 in a 20-min film)")
+    if RU.get("gfx_per_min"):                                         # the film's style sets the density (null = not checked)
+        lo, hi = RU["gfx_per_min"]
+        row(gpm >= lo - 0.05, "Graphics density", f"{len(O)} graphics, {gpm:.1f}/min",
+            f"{lo}-{hi}/min, style {sty} ({round(lo * mins)}-{round(hi * mins)} in this film)")
     full = [o for o in O if o["kind"] in E["full_kinds"]]
     stat = [f"{o['id']} {o['p']['dur'] - max(o['p']['at']):.1f}s" for o in full if o["p"]["dur"] - max(o["p"]["at"]) > P.cfg["overlay"]["full_hold"] + 0.1]
     row(not stat, "Full-screen graphics holding still", f"{len(stat)} " + ", ".join(stat[:5]), f"≤ {P.cfg['overlay']['full_hold']} s after the last beat")
@@ -126,9 +130,12 @@ def qc(P, args):
     if plan:
         from .audio import coverage
         cv = coverage(P, plan)
-        row(cv >= 0.85, "Music under the narration", f"{cv * 100:.0f}%", "≥ 85% (near-continuous score)")
-        gains = [m["gain_db"] for m in plan["music"]]
-        row(True, "Music cue gains", f"{min(gains):.0f} … {max(gains):.0f} dB", "aim for the bed about 15 dB under the voice after ducking")
+        if RU.get("music_coverage") is not None:
+            row(cv >= RU["music_coverage"] - 0.02, "Music under the narration", f"{cv * 100:.0f}%",
+                f"≥ {RU['music_coverage'] * 100:.0f}% (style {sty})")
+        gains = [m["gain_db"] for m in plan["music"]] or [0]
+        row(True, "Music cue gains", f"{min(gains):.0f} … {max(gains):.0f} dB",
+            f"aim for the bed about {RU.get('music_under_voice_db', 15)} dB under the voice after ducking (style {sty})")
     film = args[0] if args else P.out(P.cfg["output"])              # qc <file>: the film Resolve rendered
     mix = film if args else P.p("07_Audio", "final_mix.wav")
     if os.path.exists(mix):

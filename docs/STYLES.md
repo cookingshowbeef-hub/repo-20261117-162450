@@ -94,7 +94,11 @@ Mọi khóa đều không bắt buộc. `"extends"` lấy một style khác làm
 }
 ```
 
-Font phải có trong `templates/remotion/public/fonts` (file `.ttf`/`.woff2`) hoặc là font hệ thống Windows. Thêm font mới: chép file vào thư mục đó, rồi khai trong `gfx.fonts.<sans|serif|mono>.files`.
+Font: file `.ttf`/`.woff2` khai trong `gfx.fonts.<sans|serif|mono>.files`, hoặc `files: []` = font đã cài trong Windows.
+- File font để ở `templates/remotion/public/fonts` (dùng cho mọi phim), **hoặc cạnh file style của người dùng** (`"file": "fonts/MyFont.ttf"` tính từ thư mục file style), hoặc đường dẫn đầy đủ. `new --style` / `style set` chép các file đó vào `04_Scripts_Code/fonts/`.
+- `gfx` (và `new`) tự chép mọi file font style cần vào `06_Graphics/remotion/public/` của phim, kể cả font thêm vào engine sau khi phim đã tạo. Thiếu file hoặc font chưa cài thì in `! gfx: font ...` và đồ họa dùng font dự phòng.
+- `fonts_vi` (phim `voice.language` = `vi`) chỉ thay đúng ô font nó được làm cho: style đổi font một ô (vd. noir đổi serif sang Courier New) mà không ghi `fonts_vi` cho ô đó thì giữ font của style. Font riêng cần có đủ dấu tiếng Việt.
+- Chữ Premiere (`text_spec.py`) dùng `gfx.premiere_font`, nếu không có thì dùng font serif của style. Premiere chỉ thấy font đã cài trong Windows: font chưa cài thì về Georgia, và `premiere` in tên file cần cài (chuột phải > Install).
 
 ## Tạo style mới
 

@@ -84,7 +84,8 @@ def create(active, *args):
     open(os.path.join(code, "FACT_CHECK.md"), "w", encoding="utf-8").write(
         f"# {title} — fact check\n\n| Claim (line) | Source | Status |\n|---|---|---|\n")
     rem = os.path.join(root, "06_Graphics", "remotion")
-    shutil.copytree(os.path.join(TPL, "remotion"), rem, dirs_exist_ok=True)
+    # not node_modules: SETUP puts the shared one in templates/remotion, and it is linked below (a copy is GBs and blocks the junction)
+    shutil.copytree(os.path.join(TPL, "remotion"), rem, dirs_exist_ok=True, ignore=shutil.ignore_patterns("node_modules"))
     if not NODE_MODULES:
         print("  ! no Remotion node_modules: run  npm install  in templates/remotion  (or set DOC_NODE_MODULES), then make this project again")
     else:
